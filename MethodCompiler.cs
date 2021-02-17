@@ -45,14 +45,12 @@ namespace CSharpLLVM
             }
         }
 
-        private void AddBasicBlock(int from, int to)
+        private void AddBasicBlock(int id)
         {
-            if (!offsetToBasicBlock.ContainsKey(to))
+            if (!offsetToBasicBlock.ContainsKey(id))
             {
-                offsetToBasicBlock.Add(to, new BasicBlock(this, FunctionValueRef, "IL_" + to.ToString("x")));
+                offsetToBasicBlock.Add(id, new BasicBlock(this, FunctionValueRef, "IL_" + id.ToString("x")));
             }
-
-            //AddOutgoingEdge(from, to);
         }
 
         public void Compile()
@@ -88,7 +86,7 @@ namespace CSharpLLVM
                     {
                         // This is a fallthrough?
                         if(currentBlockIndex != insn.Offset) {
-                            if(insn.Previous.OpCode.Code != Code.Br_S)//TODO
+                            if(!IsUnconditionalBranchInstruction(insn))
                                 AddOutgoingEdge(currentBlockIndex, insn.Offset);
                         }
 
@@ -98,11 +96,11 @@ namespace CSharpLLVM
                     if(IsBranchInstruction(insn))
                     {
                         Console.WriteLine("  " + currentBlockIndex + " encounter branch instruction: " + insn);
-                        AddBasicBlock(currentBlockIndex, ((Instruction) insn.Operand).Offset);
+                        AddBasicBlock(((Instruction) insn.Operand).Offset);
                         AddOutgoingEdge(currentBlockIndex, ((Instruction) insn.Operand).Offset);
-                        AddBasicBlock(currentBlockIndex, insn.Next.Offset);
+                        AddBasicBlock(insn.Next.Offset);
                         // If this is an unconditional branch, the next instruction is not reachable from this block.
-                        if(insn.OpCode.Code != Code.Br && insn.OpCode.Code != Code.Br_S) // TODO: this condition should be a function
+                        if(IsUnconditionalBranchInstruction(insn))
                             AddOutgoingEdge(currentBlockIndex, insn.Next.Offset);
                     }
 
@@ -175,7 +173,17 @@ namespace CSharpLLVM
             compiler.InstructionProcessorDispatcher.Process(this, insn, builder);
         }
 
-
+        public bool IsUnconditionalBranchInstruction(Instruction insn)
+        {
+            switch(insn.OpCode.Code)
+            {
+                case Code.Br:
+                case Code.Br_S:
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
         // TODO: move these utils?
         public bool IsBranchInstruction(Instruction insn)
@@ -194,7 +202,7 @@ namespace CSharpLLVM
             }
         }
 
-        public bool IsTerminator(Instruction insn)
+        public bool IsTerminator(Instruction insn) // todo: RENAME TO "IsBlockTerminator"
         {
             if(IsBranchInstruction(insn))
                 return true;
