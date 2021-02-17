@@ -32,16 +32,15 @@ namespace CSharpLLVM
 
         private void AddOutgoingEdge(int from, int to)
         {
-            // TODO: only one outgoing edge possible per block?
-            if(outgoingEdges.TryGetValue(from, out var list))
+            if(outgoingEdges.TryGetValue(from, out var set))
             {
-                list.Add(to);
+                set.Add(to);
             }
             else
             {
-                var newList = new HashSet<int>();
-                outgoingEdges.Add(from, newList);
-                newList.Add(to);
+                var newSet = new HashSet<int>();
+                outgoingEdges.Add(from, newSet);
+                newSet.Add(to);
             }
         }
 
@@ -81,8 +80,7 @@ namespace CSharpLLVM
                 int currentBlockIndex = 0;
                 foreach(Instruction insn in MethodDef.Body.Instructions)
                 {
-                    // TODO: XXX shitty
-                    if(GetBasicBlock(insn.Offset, out var _lol))
+                    if(HasBasicBlock(insn.Offset))
                     {
                         // This is a fallthrough?
                         if(currentBlockIndex != insn.Offset) {
@@ -95,7 +93,6 @@ namespace CSharpLLVM
 
                     if(IsBranchInstruction(insn))
                     {
-                        Console.WriteLine("  " + currentBlockIndex + " encounter branch instruction: " + insn);
                         AddBasicBlock(((Instruction) insn.Operand).Offset);
                         AddOutgoingEdge(currentBlockIndex, ((Instruction) insn.Operand).Offset);
                         AddBasicBlock(insn.Next.Offset);
@@ -113,14 +110,13 @@ namespace CSharpLLVM
                 int currentBlockIndex = 0; // TODO: put the offset in the basic block object?
                 foreach(Instruction insn in MethodDef.Body.Instructions)
                 {
-                    // TODO: shitty
                     // This basic block has ended, switch to another if required.
                     if(GetBasicBlock(insn.Offset, out var basicBlock))
                     {
                         // `CurrentBasicBlock` can be null, because this will be executed for IL_0 as well.
 
                         // If we have to terminate the old basic block explicitely because we created it implicitly, do so.
-                        if(CurrentBasicBlock != null && !IsTerminator(insn.Previous))
+                        if(CurrentBasicBlock != null && !IsBlockTerminator(insn.Previous))
                         {
                             // TODO: will be incorrect when we change this to loop in a different order
                             LLVM.BuildBr(builder, basicBlock.LLVMBlock);
@@ -138,11 +134,9 @@ namespace CSharpLLVM
                             {
                                 foreach(int destination in destinations)
                                 {
-                                    if(GetBasicBlock(destination, out var destinationBlock))
-                                    {
-                                        Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
-                                        destinationBlock.InheritState(builder, CurrentBasicBlock.GetState());
-                                    }
+                                    var destinationBlock = GetBasicBlock(destination);
+                                    Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
+                                    destinationBlock.InheritState(builder, CurrentBasicBlock.GetState());
                                 }
                             }
                         }
@@ -162,9 +156,18 @@ namespace CSharpLLVM
             LLVM.DisposeBuilder(builder);
         }
 
+        public bool HasBasicBlock(int offset)
+        {
+            return offsetToBasicBlock.ContainsKey(offset);
+        }
+
+        public BasicBlock GetBasicBlock(int offset)
+        {
+            return offsetToBasicBlock[offset];
+        }
+
         public bool GetBasicBlock(int offset, out BasicBlock basicBlock)
         {
-            // TODO: make hard fail to simplify code?
             return offsetToBasicBlock.TryGetValue(offset, out basicBlock);
         }
 
@@ -188,13 +191,20 @@ namespace CSharpLLVM
         // TODO: move these utils?
         public bool IsBranchInstruction(Instruction insn)
         {
-            // TODO: incomplete
             switch(insn.OpCode.Code)
             {
                 case Code.Br:
                 case Code.Br_S:
                 case Code.Brfalse:
                 case Code.Brfalse_S:
+                case Code.Brtrue:
+                case Code.Brtrue_S:
+                //case Code.Call:
+                //case Code.Calli:
+                //case Code.Callvirt:
+                case Code.Jmp:
+                case Code.Leave:
+                case Code.Leave_S:
                     return true;
 
                 default:
@@ -202,19 +212,15 @@ namespace CSharpLLVM
             }
         }
 
-        public bool IsTerminator(Instruction insn) // todo: RENAME TO "IsBlockTerminator"
+        public bool IsBlockTerminator(Instruction insn)
         {
-            if(IsBranchInstruction(insn))
-                return true;
-
-            // TODO: incomplete
             switch(insn.OpCode.Code)
             {
                 case Code.Ret:
                     return true;
-                
+
                 default:
-                    return false;
+                    return IsBranchInstruction(insn);
             }
         }
     }
