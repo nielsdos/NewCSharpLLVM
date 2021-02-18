@@ -29,7 +29,7 @@ namespace CSharpLLVM
                 var other = state.Locals[i];
                 if(other != null)
                 {
-                    Console.WriteLine("    Copying local " + i);
+                    //Console.WriteLine("    Copying local " + i);
                     Locals[i] = new EmulatedStateValue(builder, origin, other);
                     LocalsAtStart[i] = Locals[i];
                 }
@@ -78,7 +78,7 @@ namespace CSharpLLVM
                 if(otherState.Locals[i] == null)
                     continue;
 
-                Console.WriteLine("    Inheriting local " + i);
+                //Console.WriteLine("    Inheriting local " + i);
 
                 if(LocalsAtStart[i] != null)
                     LocalsAtStart[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);

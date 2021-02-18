@@ -1,5 +1,4 @@
 using LLVMSharp;
-using System;
 
 namespace CSharpLLVM
 {

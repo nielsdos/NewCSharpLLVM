@@ -61,7 +61,7 @@ namespace CSharpLLVM
             LLVMBuilderRef builder = LLVM.CreateBuilder();
 
             // Add the entry point as the first basic block.
-            offsetToBasicBlock.Add(0, new BasicBlock(this, FunctionValueRef, "IL_0"));
+            AddBasicBlock(0);
 
             // Generate the entry point code.
             // This includes the setup for arguments.
