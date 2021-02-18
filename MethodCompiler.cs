@@ -133,9 +133,6 @@ namespace CSharpLLVM
                         LLVM.BuildBr(builder, basicBlock.LLVMBlock);
                     }
 
-                    Console.WriteLine("I'm in block " + currentBlockIndex.ToString("x"));
-                    Console.WriteLine("Locals left: " + CurrentBasicBlock.GetState().LocalCount());
-
                     // Inherit state to outgoing edges.
                     if(outgoingEdges.TryGetValue(currentBlockIndex, out var destinations))
                     {
@@ -177,7 +174,7 @@ namespace CSharpLLVM
 
         private void CompileInstruction(Instruction insn, LLVMBuilderRef builder)
         {
-            Console.WriteLine("  compile " + insn);
+            //Console.WriteLine("  compile " + insn);
             compiler.InstructionProcessorDispatcher.Process(this, insn, builder);
         }
     }
