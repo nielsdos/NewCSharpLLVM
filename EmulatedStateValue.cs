@@ -17,22 +17,21 @@ namespace CSharpLLVM
             Origin = origin;
         }
 
-        public EmulatedStateValue(LLVMBuilderRef builder, EmulatedStateValue otherValue)
+        public EmulatedStateValue(LLVMBuilderRef builder, BasicBlock origin, EmulatedStateValue otherValue)
         {
-            Value = otherValue.Value;
-            Origin = otherValue.Origin;
+            Origin = origin;
             isPhi = true;
 
-            LLVMValueRef old = Value;
-            Value = LLVM.BuildPhi(builder, LLVM.TypeOf(Value), string.Empty);
+            LLVMValueRef old = otherValue.Value;
+            Value = LLVM.BuildPhi(builder, LLVM.TypeOf(old), string.Empty);
             LLVMValueRef[] incoming = { old };
-            LLVMBasicBlockRef[] basicBlocks = { Origin.LLVMBlock };
+            LLVMBasicBlockRef[] basicBlocks = { origin.LLVMBlock };
             LLVM.AddIncoming(Value, incoming, basicBlocks, 1);
         }
 
         public void Merge(LLVMBuilderRef builder, BasicBlock mergingBasicBlock, EmulatedStateValue other)
         {
-            Console.WriteLine("      Construct phi node!");
+            Console.WriteLine("      Construct phi node! " + isPhi);
 
             if(isPhi)
             {
@@ -52,7 +51,7 @@ namespace CSharpLLVM
             
 
             // Phi node predecessor relationship isn't transitive.
-            Origin = mergingBasicBlock;
+            //Origin = mergingBasicBlock;
         }
     }
 }

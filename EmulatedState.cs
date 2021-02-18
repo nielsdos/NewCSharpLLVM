@@ -7,40 +7,45 @@ namespace CSharpLLVM
     public class EmulatedState
     {
         private List<EmulatedStateValue> evaluationStack = new List<EmulatedStateValue>();
+        private List<EmulatedStateValue> evaluationStackAtStart; // XXX: bad?
         public EmulatedStateValue[] Locals { get; private set; }
-        private EmulatedStateValue[] LocalsBeforeAnyInstructionIsExecuted;
+        private EmulatedStateValue[] LocalsAtStart; // XXX: bad?
 
         public int StackSize { get { return evaluationStack.Count; } }
 
         public EmulatedState(int localCount)
         {
             Locals = new EmulatedStateValue[localCount];
-            LocalsBeforeAnyInstructionIsExecuted = new EmulatedStateValue[localCount];
+            LocalsAtStart = new EmulatedStateValue[localCount];
         }
 
         public EmulatedState(EmulatedState state, LLVMBuilderRef builder, BasicBlock origin)
         {
             Locals = new EmulatedStateValue[state.Locals.Length];
-            LocalsBeforeAnyInstructionIsExecuted = new EmulatedStateValue[state.Locals.Length];
+            LocalsAtStart = new EmulatedStateValue[state.Locals.Length];
             for(int i = 0; i < Locals.Length; ++i)
             {
                 var other = state.Locals[i];
-                if(other != null/* && other.Origin == origin*/)
+                if(other != null)
                 {
                     Console.WriteLine("    Copying local " + i);
-                    Locals[i] = new EmulatedStateValue(builder, other);
-                    LocalsBeforeAnyInstructionIsExecuted[i] = Locals[i];
+                    Locals[i] = new EmulatedStateValue(builder, origin, other);
+                    LocalsAtStart[i] = Locals[i];
                 }
             }
 
             foreach(var value in state.evaluationStack)
             {
-                evaluationStack.Add(new EmulatedStateValue(builder, value));
+                evaluationStack.Add(new EmulatedStateValue(builder, origin, value));
             }
+
+            evaluationStackAtStart = new List<EmulatedStateValue>(evaluationStack);
         }
 
         public void StackPush(EmulatedStateValue value)
         {
+            if(value == null)
+                throw new Exception("value is null??");
             evaluationStack.Add(value);
         }
 
@@ -65,7 +70,7 @@ namespace CSharpLLVM
 
         public void Merge(LLVMBuilderRef builder, BasicBlock mergingBasicBlock, EmulatedState otherState)
         {
-            if(evaluationStack.Count != otherState.evaluationStack.Count)
+            if(evaluationStackAtStart.Count != otherState.evaluationStack.Count)
                 throw new InvalidOperationException("Cannot merge stacks with a difference in size");
 
             for(int i = 0; i < Math.Max(Locals.Length, otherState.Locals.Length); ++i)
@@ -75,17 +80,13 @@ namespace CSharpLLVM
 
                 Console.WriteLine("    Inheriting local " + i);
 
-                // TODO: similar to "LocalsBeforeAnyInstructionIsExecuted", we should handle the stack as this as well?
-                // XXX: or find a diff solution
-                if(LocalsBeforeAnyInstructionIsExecuted[i] != null)
-                    LocalsBeforeAnyInstructionIsExecuted[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);
-                else if(LocalsBeforeAnyInstructionIsExecuted[i] == null)
-                    LocalsBeforeAnyInstructionIsExecuted[i] = new EmulatedStateValue(builder, otherState.Locals[i]);
+                if(LocalsAtStart[i] != null)
+                    LocalsAtStart[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);
             }
 
-            for(int i = 0; i < evaluationStack.Count; ++i)
+            for(int i = 0; i < evaluationStackAtStart.Count; ++i)
             {
-                evaluationStack[i].Merge(builder, mergingBasicBlock, otherState.evaluationStack[i]);
+                evaluationStackAtStart[i].Merge(builder, mergingBasicBlock, otherState.evaluationStack[i]);
             }
         }
     }

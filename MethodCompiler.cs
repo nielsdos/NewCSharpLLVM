@@ -32,6 +32,7 @@ namespace CSharpLLVM
 
         private void AddOutgoingEdge(int from, int to)
         {
+            Console.WriteLine("edge " + from.ToString("x") + " -> " + to.ToString("x"));
             if(outgoingEdges.TryGetValue(from, out var set))
             {
                 set.Add(to);
@@ -83,8 +84,10 @@ namespace CSharpLLVM
                     if(HasBasicBlock(insn.Offset))
                     {
                         // This is a fallthrough?
-                        if(currentBlockIndex != insn.Offset) {
-                            if(!insn.IsUnconditionalBranchInstruction())
+                        if(currentBlockIndex != insn.Offset)
+                        {
+                            // Can't be fallthrough if previous instruction was an unconditional branch.
+                            if(!insn.Previous.IsUnconditionalBranchInstruction())
                                 AddOutgoingEdge(currentBlockIndex, insn.Offset);
                         }
 
@@ -96,8 +99,8 @@ namespace CSharpLLVM
                         AddBasicBlock(((Instruction) insn.Operand).Offset);
                         AddOutgoingEdge(currentBlockIndex, ((Instruction) insn.Operand).Offset);
                         AddBasicBlock(insn.Next.Offset);
-                        // If this is an unconditional branch, the next instruction is not reachable from this block.
-                        if(insn.IsUnconditionalBranchInstruction())
+                        // Can't be fallthrough if current instruction was an unconditional branch.
+                        if(!insn.IsUnconditionalBranchInstruction())
                             AddOutgoingEdge(currentBlockIndex, insn.Next.Offset);
                     }
 
@@ -146,12 +149,12 @@ namespace CSharpLLVM
                     {
                         foreach(int destination in destinations)
                         {
-                            // TODO: actually, this should be merged into this own method, such that the loops are merged
+                            // TODO: actually, this should be merged into its own method, such that the loops are merged
                             // and the position code is not duplicated...
                             var destinationBlock = GetBasicBlock(destination);
                             LLVM.PositionBuilderAtEnd(builder, destinationBlock.LLVMBlock);
                             Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
-                            destinationBlock.InheritState(builder, CurrentBasicBlock.GetState());
+                            destinationBlock.InheritState(builder, CurrentBasicBlock, CurrentBasicBlock.GetState());
                         }
                     }
 
@@ -196,6 +199,7 @@ namespace CSharpLLVM
 
         private void CompileInstruction(Instruction insn, LLVMBuilderRef builder)
         {
+            Console.WriteLine("  compile " + insn);
             compiler.InstructionProcessorDispatcher.Process(this, insn, builder);
         }
     }

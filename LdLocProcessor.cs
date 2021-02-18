@@ -22,7 +22,6 @@ namespace CSharpLLVM
             }
 
             compiler.CurrentBasicBlock.GetState().StackPush(compiler.CurrentBasicBlock.GetState().Locals[index]);
-            compiler.CurrentBasicBlock.GetState().Locals[index] = null;
         }
     }
 }
