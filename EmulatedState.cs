@@ -8,30 +8,34 @@ namespace CSharpLLVM
     {
         private List<EmulatedStateValue> evaluationStack = new List<EmulatedStateValue>();
         public EmulatedStateValue[] Locals { get; private set; }
+        private EmulatedStateValue[] LocalsBeforeAnyInstructionIsExecuted;
 
         public int StackSize { get { return evaluationStack.Count; } }
 
         public EmulatedState(int localCount)
         {
             Locals = new EmulatedStateValue[localCount];
+            LocalsBeforeAnyInstructionIsExecuted = new EmulatedStateValue[localCount];
         }
 
-        public EmulatedState(EmulatedState state, BasicBlock origin)
+        public EmulatedState(EmulatedState state, LLVMBuilderRef builder, BasicBlock origin)
         {
             Locals = new EmulatedStateValue[state.Locals.Length];
+            LocalsBeforeAnyInstructionIsExecuted = new EmulatedStateValue[state.Locals.Length];
             for(int i = 0; i < Locals.Length; ++i)
             {
                 var other = state.Locals[i];
                 if(other != null/* && other.Origin == origin*/)
                 {
                     Console.WriteLine("    Copying local " + i);
-                    Locals[i] = new EmulatedStateValue(other);
+                    Locals[i] = new EmulatedStateValue(builder, other);
+                    LocalsBeforeAnyInstructionIsExecuted[i] = Locals[i];
                 }
             }
 
             foreach(var value in state.evaluationStack)
             {
-                evaluationStack.Add(new EmulatedStateValue(value));
+                evaluationStack.Add(new EmulatedStateValue(builder, value));
             }
         }
 
@@ -71,10 +75,12 @@ namespace CSharpLLVM
 
                 Console.WriteLine("    Inheriting local " + i);
 
-                if(Locals[i] != null)
-                    Locals[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);
-                else if(Locals[i] == null)
-                    Locals[i] = new EmulatedStateValue(otherState.Locals[i]);
+                // TODO: similar to "LocalsBeforeAnyInstructionIsExecuted", we should handle the stack as this as well?
+                // XXX: or find a diff solution
+                if(LocalsBeforeAnyInstructionIsExecuted[i] != null)
+                    LocalsBeforeAnyInstructionIsExecuted[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);
+                else if(LocalsBeforeAnyInstructionIsExecuted[i] == null)
+                    LocalsBeforeAnyInstructionIsExecuted[i] = new EmulatedStateValue(builder, otherState.Locals[i]);
             }
 
             for(int i = 0; i < evaluationStack.Count; ++i)

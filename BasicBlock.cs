@@ -27,7 +27,7 @@ namespace CSharpLLVM
         {
             if(state == null)
             {
-                state = new EmulatedState(inheritedState, this);
+                state = new EmulatedState(inheritedState, builder, this);
             }
             else
             {
