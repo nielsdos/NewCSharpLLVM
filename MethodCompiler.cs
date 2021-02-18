@@ -105,57 +105,78 @@ namespace CSharpLLVM
                 }
             }
 
-            // Now, generate the instructions.
-            {
-                int currentBlockIndex = 0; // TODO: put the offset in the basic block object?
-                foreach(Instruction insn in MethodDef.Body.Instructions)
-                {
-                    // This basic block has ended, switch to another if required.
-                    if(GetBasicBlock(insn.Offset, out var basicBlock))
-                    {
-                        // `CurrentBasicBlock` can be null, because this will be executed for IL_0 as well.
-
-                        // If we have to terminate the old basic block explicitely because we created it implicitly, do so.
-                        if(CurrentBasicBlock != null && !insn.Previous.IsBlockTerminator())
-                        {
-                            // TODO: will be incorrect when we change this to loop in a different order
-                            LLVM.BuildBr(builder, basicBlock.LLVMBlock);
-                        }
-
-                        // Activate new basic block.
-                        LLVM.PositionBuilderAtEnd(builder, basicBlock.LLVMBlock);
-
-                        if(CurrentBasicBlock != null)
-                        {
-                            Console.WriteLine("I'm in block " + currentBlockIndex.ToString("x"));
-                            Console.WriteLine("Locals left: " + CurrentBasicBlock.GetState().LocalCount());
-
-                            // Inherit state to outgoing edges.
-                            if(outgoingEdges.TryGetValue(currentBlockIndex, out var destinations))
-                            {
-                                foreach(int destination in destinations)
-                                {
-                                    var destinationBlock = GetBasicBlock(destination);
-                                    Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
-                                    destinationBlock.InheritState(builder, CurrentBasicBlock.GetState());
-                                }
-                            }
-                        }
-
-                        // TODO: still not correct to always continue with next block?
-
-                        currentBlockIndex = insn.Offset;
-                        CurrentBasicBlock = basicBlock;
-                    }
-
-                    Console.WriteLine("compiling " + insn);
-                    CompileInstruction(insn, builder);
-
-                    //Console.WriteLine("  stack count after insn: " + CurrentBasicBlock.GetState().StackSize);
-                }
-            }
+            lol(builder, 0);
 
             LLVM.DisposeBuilder(builder);
+        }
+
+        private HashSet<int> processedBlocks = new HashSet<int>();
+
+        private void lol(LLVMBuilderRef builder, int currentBlockIndex) {
+            Console.WriteLine("           process " + currentBlockIndex.ToString("x"));
+            CurrentBasicBlock = GetBasicBlock(currentBlockIndex);
+            LLVM.PositionBuilderAtEnd(builder, CurrentBasicBlock.LLVMBlock);
+
+            processedBlocks.Add(currentBlockIndex);
+
+            
+            foreach(Instruction insn in MethodDef.Body.Instructions)
+            {
+                // TODO: XXX shitty
+                if(insn.Offset < currentBlockIndex) continue;
+
+                // TODO: also a shitty check...
+                // This basic block has ended, switch to another if required.
+                if(insn.Offset > currentBlockIndex && GetBasicBlock(insn.Offset, out var basicBlock))
+                {
+                    // If we have to terminate the old basic block explicitely because we created it implicitly, do so.
+                    if(!insn.Previous.IsBlockTerminator())
+                    {
+                        LLVM.BuildBr(builder, basicBlock.LLVMBlock);
+                    }
+
+                    // Activate new basic block.
+                    //LLVM.PositionBuilderAtEnd(builder, basicBlock.LLVMBlock);
+
+                    Console.WriteLine("I'm in block " + currentBlockIndex.ToString("x"));
+                    Console.WriteLine("Locals left: " + CurrentBasicBlock.GetState().LocalCount());
+
+                    // Inherit state to outgoing edges.
+                    if(outgoingEdges.TryGetValue(currentBlockIndex, out var destinations))
+                    {
+                        foreach(int destination in destinations)
+                        {
+                            // TODO: actually, this should be merged into this own method, such that the loops are merged
+                            // and the position code is not duplicated...
+                            var destinationBlock = GetBasicBlock(destination);
+                            LLVM.PositionBuilderAtEnd(builder, destinationBlock.LLVMBlock);
+                            Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
+                            destinationBlock.InheritState(builder, CurrentBasicBlock.GetState());
+                        }
+                    }
+
+                    // TODO: code duplication
+                    if(outgoingEdges.TryGetValue(currentBlockIndex, out var destinations2))
+                    {
+                        foreach(int destination in destinations2)
+                        {
+                            if(!processedBlocks.Contains(destination))
+                            {
+                                lol(builder, destination);
+                            }
+                        }
+                    }
+
+                    //currentBlockIndex = insn.Offset;
+                    //CurrentBasicBlock = basicBlock;
+                    break;
+                }
+
+                LLVM.PositionBuilderAtEnd(builder, CurrentBasicBlock.LLVMBlock);//TODO: shitty
+                CompileInstruction(insn, builder);
+
+                //Console.WriteLine("  stack count after insn: " + CurrentBasicBlock.GetState().StackSize);
+            }
         }
 
         public bool HasBasicBlock(int offset)
