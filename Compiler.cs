@@ -34,13 +34,13 @@ namespace CSharpLLVM
             LLVM.InitializeFunctionPassManager(fnPassManager);
 
             // Optimizations
-            LLVM.AddPromoteMemoryToRegisterPass(fnPassManager);
+            /*LLVM.AddPromoteMemoryToRegisterPass(fnPassManager);
             LLVM.AddInstructionCombiningPass(fnPassManager);
             LLVM.AddJumpThreadingPass(fnPassManager);
             LLVM.AddGVNPass(fnPassManager);
             LLVM.AddEarlyCSEPass(fnPassManager);
             LLVM.AddConstantPropagationPass(fnPassManager);
-            LLVM.AddCFGSimplificationPass(fnPassManager);
+            LLVM.AddCFGSimplificationPass(fnPassManager);*/
 
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {

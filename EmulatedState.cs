@@ -16,14 +16,17 @@ namespace CSharpLLVM
             Locals = new EmulatedStateValue[localCount];
         }
 
-        public EmulatedState(EmulatedState state)
+        public EmulatedState(EmulatedState state, BasicBlock origin)
         {
             Locals = new EmulatedStateValue[state.Locals.Length];
             for(int i = 0; i < Locals.Length; ++i)
             {
                 var other = state.Locals[i];
-                if(other != null)
+                if(other != null/* && other.Origin == origin*/)
+                {
+                    Console.WriteLine("    Copying local " + i);
                     Locals[i] = new EmulatedStateValue(other);
+                }
             }
 
             foreach(var value in state.evaluationStack)
@@ -56,14 +59,17 @@ namespace CSharpLLVM
             return count;
         }
 
-        public void Merge(LLVMBuilderRef builder, LLVMBasicBlockRef mergingBasicBlock, EmulatedState otherState)
+        public void Merge(LLVMBuilderRef builder, BasicBlock mergingBasicBlock, EmulatedState otherState)
         {
             if(evaluationStack.Count != otherState.evaluationStack.Count)
                 throw new InvalidOperationException("Cannot merge stacks with a difference in size");
 
             for(int i = 0; i < Math.Max(Locals.Length, otherState.Locals.Length); ++i)
             {
-                if(otherState.Locals[i] == null) continue;
+                if(otherState.Locals[i] == null)
+                    continue;
+
+                Console.WriteLine("    Inheriting local " + i);
 
                 if(Locals[i] != null)
                     Locals[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);

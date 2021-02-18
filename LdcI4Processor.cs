@@ -21,7 +21,7 @@ namespace CSharpLLVM
     {
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
-            LLVMValueRef value = LLVM.ConstInt(LLVM.Int32Type(), 1, true);
+            LLVMValueRef value;
 
             Code code = insn.OpCode.Code;
             if (code >= Code.Ldc_I4_0 && code <= Code.Ldc_I4_8)

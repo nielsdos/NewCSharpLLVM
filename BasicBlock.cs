@@ -27,11 +27,11 @@ namespace CSharpLLVM
         {
             if(state == null)
             {
-                state = new EmulatedState(inheritedState);
+                state = new EmulatedState(inheritedState, this);
             }
             else
             {
-                state.Merge(builder, LLVMBlock, inheritedState);
+                state.Merge(builder, this, inheritedState);
             }
         }
     }

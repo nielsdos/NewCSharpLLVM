@@ -101,7 +101,7 @@ namespace CSharpLLVM
                             AddOutgoingEdge(currentBlockIndex, insn.Next.Offset);
                     }
 
-                    Console.WriteLine(insn);
+                    //Console.WriteLine(insn);
                 }
             }
 
@@ -148,6 +148,7 @@ namespace CSharpLLVM
                         CurrentBasicBlock = basicBlock;
                     }
 
+                    Console.WriteLine("compiling " + insn);
                     CompileInstruction(insn, builder);
 
                     //Console.WriteLine("  stack count after insn: " + CurrentBasicBlock.GetState().StackSize);
