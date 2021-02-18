@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using LLVMSharp;
+using System.Diagnostics;
 
 namespace CSharpLLVM
 {
     public class EmulatedState
     {
         private List<EmulatedStateValue> evaluationStack = new List<EmulatedStateValue>();
-        private List<EmulatedStateValue> evaluationStackAtStart; // XXX: bad?
+        private List<EmulatedStateValue> evaluationStackAtStart;
         public EmulatedStateValue[] Locals { get; private set; }
-        private EmulatedStateValue[] LocalsAtStart; // XXX: bad?
+        private EmulatedStateValue[] LocalsAtStart;
 
         public int StackSize { get { return evaluationStack.Count; } }
 
@@ -44,8 +45,7 @@ namespace CSharpLLVM
 
         public void StackPush(EmulatedStateValue value)
         {
-            if(value == null)
-                throw new Exception("value is null??");
+            Debug.Assert(value != null);
             evaluationStack.Add(value);
         }
 
