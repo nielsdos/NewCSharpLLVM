@@ -84,20 +84,20 @@ namespace CSharpLLVM
                     {
                         // This is a fallthrough?
                         if(currentBlockIndex != insn.Offset) {
-                            if(!IsUnconditionalBranchInstruction(insn))
+                            if(!insn.IsUnconditionalBranchInstruction())
                                 AddOutgoingEdge(currentBlockIndex, insn.Offset);
                         }
 
                         currentBlockIndex = insn.Offset;
                     }
 
-                    if(IsBranchInstruction(insn))
+                    if(insn.IsBranchInstruction())
                     {
                         AddBasicBlock(((Instruction) insn.Operand).Offset);
                         AddOutgoingEdge(currentBlockIndex, ((Instruction) insn.Operand).Offset);
                         AddBasicBlock(insn.Next.Offset);
                         // If this is an unconditional branch, the next instruction is not reachable from this block.
-                        if(IsUnconditionalBranchInstruction(insn))
+                        if(insn.IsUnconditionalBranchInstruction())
                             AddOutgoingEdge(currentBlockIndex, insn.Next.Offset);
                     }
 
@@ -116,7 +116,7 @@ namespace CSharpLLVM
                         // `CurrentBasicBlock` can be null, because this will be executed for IL_0 as well.
 
                         // If we have to terminate the old basic block explicitely because we created it implicitly, do so.
-                        if(CurrentBasicBlock != null && !IsBlockTerminator(insn.Previous))
+                        if(CurrentBasicBlock != null && !insn.Previous.IsBlockTerminator())
                         {
                             // TODO: will be incorrect when we change this to loop in a different order
                             LLVM.BuildBr(builder, basicBlock.LLVMBlock);
@@ -174,54 +174,6 @@ namespace CSharpLLVM
         private void CompileInstruction(Instruction insn, LLVMBuilderRef builder)
         {
             compiler.InstructionProcessorDispatcher.Process(this, insn, builder);
-        }
-
-        public bool IsUnconditionalBranchInstruction(Instruction insn)
-        {
-            switch(insn.OpCode.Code)
-            {
-                case Code.Br:
-                case Code.Br_S:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        // TODO: move these utils?
-        public bool IsBranchInstruction(Instruction insn)
-        {
-            switch(insn.OpCode.Code)
-            {
-                case Code.Br:
-                case Code.Br_S:
-                case Code.Brfalse:
-                case Code.Brfalse_S:
-                case Code.Brtrue:
-                case Code.Brtrue_S:
-                //case Code.Call:
-                //case Code.Calli:
-                //case Code.Callvirt:
-                case Code.Jmp:
-                case Code.Leave:
-                case Code.Leave_S:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
-
-        public bool IsBlockTerminator(Instruction insn)
-        {
-            switch(insn.OpCode.Code)
-            {
-                case Code.Ret:
-                    return true;
-
-                default:
-                    return IsBranchInstruction(insn);
-            }
         }
     }
 }

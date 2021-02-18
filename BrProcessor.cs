@@ -1,6 +1,5 @@
 using LLVMSharp;
 using Mono.Cecil.Cil;
-using System.Diagnostics;
 
 namespace CSharpLLVM
 {
@@ -10,8 +9,7 @@ namespace CSharpLLVM
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
             Instruction destination = (Instruction) insn.Operand;
-            bool status = compiler.GetBasicBlock(destination.Offset, out var basicBlock);
-            Debug.Assert(status);
+            var basicBlock = compiler.GetBasicBlock(destination.Offset);
             LLVM.BuildBr(builder, basicBlock.LLVMBlock);
         }
     }
