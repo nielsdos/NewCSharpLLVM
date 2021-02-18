@@ -128,6 +128,7 @@ namespace CSharpLLVM
                         if(CurrentBasicBlock != null)
                         {
                             Console.WriteLine("I'm in block " + currentBlockIndex.ToString("x"));
+                            Console.WriteLine("Locals left: " + CurrentBasicBlock.GetState().LocalCount());
 
                             // Inherit state to outgoing edges.
                             if(outgoingEdges.TryGetValue(currentBlockIndex, out var destinations))
@@ -141,7 +142,7 @@ namespace CSharpLLVM
                             }
                         }
 
-                        // TODO: still not correct to always continue with next block
+                        // TODO: still not correct to always continue with next block?
 
                         currentBlockIndex = insn.Offset;
                         CurrentBasicBlock = basicBlock;

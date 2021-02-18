@@ -50,7 +50,7 @@ namespace CSharpLLVM
                 }
             }
 
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, compiler.CurrentBasicBlock.LLVMBlock));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, compiler.CurrentBasicBlock));
         }
     }
 }

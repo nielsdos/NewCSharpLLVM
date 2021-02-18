@@ -14,7 +14,7 @@ namespace CSharpLLVM
             var value2 = compiler.CurrentBasicBlock.GetState().StackPop();
             var value1 = compiler.CurrentBasicBlock.GetState().StackPop();
             var result = LLVM.BuildAdd(builder, value2.Value, value1.Value, string.Empty);
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, compiler.CurrentBasicBlock.LLVMBlock));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, compiler.CurrentBasicBlock));
         }
     }
 }

@@ -8,10 +8,10 @@ namespace CSharpLLVM
         public LLVMValueRef Value { get; set; }
         private LLVMBasicBlockRef Origin { get; set; }
 
-        public EmulatedStateValue(LLVMValueRef valueRef, LLVMBasicBlockRef origin)
+        public EmulatedStateValue(LLVMValueRef valueRef, BasicBlock origin)
         {
             Value = valueRef;
-            Origin = origin;
+            Origin = origin.LLVMBlock;
         }
 
         public EmulatedStateValue(EmulatedStateValue otherValue)
@@ -29,6 +29,9 @@ namespace CSharpLLVM
             LLVMValueRef[] incoming = { old, other.Value };
             LLVMBasicBlockRef[] basicBlocks = { Origin, other.Origin };
             LLVM.AddIncoming(Value, incoming, basicBlocks, 2);
+
+            // Phi node predecessor relationship isn't transitive.
+            Origin = mergingBasicBlock;
         }
     }
 }

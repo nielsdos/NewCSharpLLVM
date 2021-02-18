@@ -45,15 +45,30 @@ namespace CSharpLLVM
             return value;
         }
 
+        public int LocalCount()
+        {
+            int count = 0;
+            for(int i = 0; i < Locals.Length; ++i)
+            {
+                if(Locals[i] != null)
+                    ++count;
+            }
+            return count;
+        }
+
         public void Merge(LLVMBuilderRef builder, LLVMBasicBlockRef mergingBasicBlock, EmulatedState otherState)
         {
             if(evaluationStack.Count != otherState.evaluationStack.Count)
                 throw new InvalidOperationException("Cannot merge stacks with a difference in size");
 
-            for(int i = 0; i < Locals.Length; ++i)
+            for(int i = 0; i < Math.Max(Locals.Length, otherState.Locals.Length); ++i)
             {
+                if(otherState.Locals[i] == null) continue;
+
                 if(Locals[i] != null)
                     Locals[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);
+                else if(Locals[i] == null)
+                    Locals[i] = new EmulatedStateValue(otherState.Locals[i]);
             }
 
             for(int i = 0; i < evaluationStack.Count; ++i)
