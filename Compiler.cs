@@ -84,15 +84,16 @@ namespace CSharpLLVM
                         var methodCompiler = new MethodCompiler(this, methodDef);
                         methodCompiler.Compile();
 
-                        // TODO: make better
                         if(!LLVM.VerifyFunction(methodCompiler.FunctionValueRef, LLVMVerifierFailureAction.LLVMPrintMessageAction))
                             LLVM.RunFunctionPassManager(fnPassManager, methodCompiler.FunctionValueRef);
                     }
                 }
             }
 
-            // TODO: handle return value somehow
-            LLVM.VerifyModule(ModuleRef, LLVMVerifierFailureAction.LLVMPrintMessageAction, out var outMsg);
+            if(LLVM.VerifyModule(ModuleRef, LLVMVerifierFailureAction.LLVMPrintMessageAction, out var outMsg))
+            {
+                Console.WriteLine(outMsg);
+            }
 
             LLVM.RunPassManager(modulePassManager, ModuleRef);
 

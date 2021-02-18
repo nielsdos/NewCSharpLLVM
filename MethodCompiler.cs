@@ -19,6 +19,7 @@ namespace CSharpLLVM
         public LLVMValueRef[] ArgumentValues { get; private set; }
 
         public BasicBlock CurrentBasicBlock { get; private set; }
+        private HashSet<int> processedBlocks = new HashSet<int>();
 
         public MethodCompiler(Compiler compiler, MethodDefinition methodDefinition)
         {
@@ -32,7 +33,7 @@ namespace CSharpLLVM
 
         private void AddOutgoingEdge(int from, int to)
         {
-            Console.WriteLine("edge " + from.ToString("x") + " -> " + to.ToString("x"));
+            //Console.WriteLine("edge " + from.ToString("x") + " -> " + to.ToString("x"));
             if(outgoingEdges.TryGetValue(from, out var set))
             {
                 set.Add(to);
@@ -77,7 +78,6 @@ namespace CSharpLLVM
 
             // Now, find the basic blocks.
             {
-                // TODO: should be done in two passes?
                 int currentBlockIndex = 0;
                 foreach(Instruction insn in MethodDef.Body.Instructions)
                 {
@@ -103,25 +103,20 @@ namespace CSharpLLVM
                         if(!insn.IsUnconditionalBranchInstruction())
                             AddOutgoingEdge(currentBlockIndex, insn.Next.Offset);
                     }
-
-                    //Console.WriteLine(insn);
                 }
             }
 
-            lol(builder, 0);
+            compileBasicBlock(builder, 0);
 
             LLVM.DisposeBuilder(builder);
         }
 
-        private HashSet<int> processedBlocks = new HashSet<int>();
-
-        private void lol(LLVMBuilderRef builder, int currentBlockIndex) {
+        private void compileBasicBlock(LLVMBuilderRef builder, int currentBlockIndex) {
             Console.WriteLine("           process " + currentBlockIndex.ToString("x"));
             CurrentBasicBlock = GetBasicBlock(currentBlockIndex);
             LLVM.PositionBuilderAtEnd(builder, CurrentBasicBlock.LLVMBlock);
 
             processedBlocks.Add(currentBlockIndex);
-
             
             foreach(Instruction insn in MethodDef.Body.Instructions)
             {
@@ -138,9 +133,6 @@ namespace CSharpLLVM
                         LLVM.BuildBr(builder, basicBlock.LLVMBlock);
                     }
 
-                    // Activate new basic block.
-                    //LLVM.PositionBuilderAtEnd(builder, basicBlock.LLVMBlock);
-
                     Console.WriteLine("I'm in block " + currentBlockIndex.ToString("x"));
                     Console.WriteLine("Locals left: " + CurrentBasicBlock.GetState().LocalCount());
 
@@ -149,36 +141,22 @@ namespace CSharpLLVM
                     {
                         foreach(int destination in destinations)
                         {
-                            // TODO: actually, this should be merged into its own method, such that the loops are merged
-                            // and the position code is not duplicated...
                             var destinationBlock = GetBasicBlock(destination);
                             LLVM.PositionBuilderAtEnd(builder, destinationBlock.LLVMBlock);
                             Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
                             destinationBlock.InheritState(builder, CurrentBasicBlock, CurrentBasicBlock.GetState());
-                        }
-                    }
 
-                    // TODO: code duplication
-                    if(outgoingEdges.TryGetValue(currentBlockIndex, out var destinations2))
-                    {
-                        foreach(int destination in destinations2)
-                        {
                             if(!processedBlocks.Contains(destination))
                             {
-                                lol(builder, destination);
+                                compileBasicBlock(builder, destination);
                             }
                         }
                     }
 
-                    //currentBlockIndex = insn.Offset;
-                    //CurrentBasicBlock = basicBlock;
                     break;
                 }
 
-                LLVM.PositionBuilderAtEnd(builder, CurrentBasicBlock.LLVMBlock);//TODO: shitty
                 CompileInstruction(insn, builder);
-
-                //Console.WriteLine("  stack count after insn: " + CurrentBasicBlock.GetState().StackSize);
             }
         }
 
