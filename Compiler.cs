@@ -31,16 +31,45 @@ namespace CSharpLLVM
             LLVM.SetTarget(ModuleRef, triple);
 
             var fnPassManager = LLVM.CreateFunctionPassManagerForModule(ModuleRef);
+            var modulePassManager = LLVM.CreatePassManager();
             LLVM.InitializeFunctionPassManager(fnPassManager);
 
             // Optimizations
             LLVM.AddPromoteMemoryToRegisterPass(fnPassManager);
             LLVM.AddInstructionCombiningPass(fnPassManager);
             LLVM.AddJumpThreadingPass(fnPassManager);
-            LLVM.AddGVNPass(fnPassManager);
             LLVM.AddEarlyCSEPass(fnPassManager);
             LLVM.AddConstantPropagationPass(fnPassManager);
             LLVM.AddCFGSimplificationPass(fnPassManager);
+            LLVM.AddReassociatePass(fnPassManager);
+            LLVM.AddLoopUnrollPass(fnPassManager);
+            LLVM.AddLoopRerollPass(fnPassManager);
+            LLVM.AddLoopDeletionPass(fnPassManager);
+            LLVM.AddLoopRotatePass(fnPassManager);
+            LLVM.AddLoopIdiomPass(fnPassManager);
+            LLVM.AddLoopUnswitchPass(fnPassManager);
+            LLVM.AddDeadStoreEliminationPass(fnPassManager);
+            LLVM.AddBasicAliasAnalysisPass(fnPassManager);
+            LLVM.AddIndVarSimplifyPass(fnPassManager);
+            LLVM.AddSCCPPass(fnPassManager);
+            LLVM.AddLICMPass(fnPassManager);
+            LLVM.AddCorrelatedValuePropagationPass(fnPassManager);
+            LLVM.AddScopedNoAliasAAPass(modulePassManager);
+            LLVM.AddDeadArgEliminationPass(modulePassManager);
+            LLVM.AddTailCallEliminationPass(modulePassManager);
+            LLVM.AddLoopUnswitchPass(modulePassManager);
+            LLVM.AddIPSCCPPass(modulePassManager);
+            LLVM.AddReassociatePass(modulePassManager);
+            LLVM.AddAlwaysInlinerPass(modulePassManager);
+
+            // O2
+            LLVM.AddNewGVNPass(fnPassManager);
+            LLVM.AddLowerExpectIntrinsicPass(fnPassManager);
+            LLVM.AddScalarReplAggregatesPassSSA(fnPassManager);
+            LLVM.AddMergedLoadStoreMotionPass(fnPassManager);
+            LLVM.AddSLPVectorizePass(fnPassManager);
+            LLVM.AddConstantMergePass(modulePassManager);
+            LLVM.AddConstantMergePass(modulePassManager);
 
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
@@ -65,12 +94,10 @@ namespace CSharpLLVM
             // TODO: handle return value somehow
             LLVM.VerifyModule(ModuleRef, LLVMVerifierFailureAction.LLVMPrintMessageAction, out var outMsg);
 
-            var passManager = LLVM.CreatePassManager();
-
-            LLVM.RunPassManager(passManager, ModuleRef);
+            LLVM.RunPassManager(modulePassManager, ModuleRef);
 
             // Cleanup
-            LLVM.DisposePassManager(passManager);
+            LLVM.DisposePassManager(modulePassManager);
             LLVM.DumpModule(ModuleRef);
 
 
@@ -92,6 +119,8 @@ namespace CSharpLLVM
             {
                 Console.WriteLine(errorMsg);
             }
+
+            Console.WriteLine("written");
 
             LLVM.DisposeTargetMachine(machineRef);
         }
