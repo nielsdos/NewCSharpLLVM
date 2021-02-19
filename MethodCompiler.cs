@@ -64,11 +64,12 @@ namespace CSharpLLVM
             }
         }
 
-        private void AddBasicBlock(int id)
+        private void AddBasicBlockAt(Instruction insn)
         {
+            int id = insn.Offset;
             if (!offsetToBasicBlock.ContainsKey(id))
             {
-                offsetToBasicBlock.Add(id, new BasicBlock(this, FunctionValueRef, "IL_" + id.ToString("x")));
+                offsetToBasicBlock.Add(id, new BasicBlock(this, FunctionValueRef, insn, "IL_" + id.ToString("x")));
             }
         }
 
@@ -80,7 +81,11 @@ namespace CSharpLLVM
             LLVMBuilderRef builder = LLVM.CreateBuilder();
 
             // Add the entry point as the first basic block.
-            AddBasicBlock(0);
+            {
+                var it = MethodDef.Body.Instructions.GetEnumerator();
+                it.MoveNext();
+                AddBasicBlockAt(it.Current);
+            }
 
             // Generate the entry point code.
             // This includes the setup for arguments.
@@ -114,9 +119,9 @@ namespace CSharpLLVM
 
                     if(insn.IsBranchInstruction())
                     {
-                        AddBasicBlock(((Instruction) insn.Operand).Offset);
+                        AddBasicBlockAt((Instruction) insn.Operand);
                         AddOutgoingEdge(currentBlockIndex, ((Instruction) insn.Operand).Offset);
-                        AddBasicBlock(insn.Next.Offset);
+                        AddBasicBlockAt(insn.Next);
                         // Can't be fallthrough if current instruction was an unconditional branch.
                         if(!insn.IsUnconditionalBranchInstruction())
                             AddOutgoingEdge(currentBlockIndex, insn.Next.Offset);
@@ -135,15 +140,18 @@ namespace CSharpLLVM
             LLVM.PositionBuilderAtEnd(builder, CurrentBasicBlock.LLVMBlock);
 
             processedBlocks.Add(currentBlockIndex);
-            
-            foreach(Instruction insn in MethodDef.Body.Instructions)
-            {
-                // TODO: XXX shitty
-                if(insn.Offset < currentBlockIndex) continue;
 
-                // TODO: also a shitty check...
+            Instruction insn = CurrentBasicBlock.FirstInstructionRef;
+            while(true)
+            {
+                CompileInstruction(insn, builder);
+
+                insn = insn.Next;
+                if(insn == null)
+                    break;
+
                 // This basic block has ended, switch to another if required.
-                if(insn.Offset > currentBlockIndex && GetBasicBlock(insn.Offset, out var basicBlock))
+                if(GetBasicBlock(insn.Offset, out var basicBlock))
                 {
                     // If we have to terminate the old basic block explicitely because we created it implicitly, do so.
                     if(!insn.Previous.IsBlockTerminator())
@@ -173,8 +181,6 @@ namespace CSharpLLVM
 
                     break;
                 }
-
-                CompileInstruction(insn, builder);
             }
         }
 
