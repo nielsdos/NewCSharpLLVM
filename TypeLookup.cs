@@ -10,6 +10,7 @@ namespace CSharpLLVM
     public class TypeLookup
     {
         private Dictionary<MetadataType, LLVMTypeRef> typeMap = new Dictionary<MetadataType, LLVMTypeRef>();
+        private Dictionary<string, LLVMTypeRef> structureMap = new Dictionary<string, LLVMTypeRef>();
 
         public TypeLookup()
         {
@@ -25,6 +26,20 @@ namespace CSharpLLVM
             typeMap.Add(MetadataType.Void, LLVM.VoidType());
         }
 
+        public void AddType(TypeDefinition typeDef)
+        {
+            LLVMTypeRef[] typeRefs = new LLVMTypeRef[typeDef.Fields.Count];
+            int i = 0;
+            foreach(FieldDefinition fieldDef in typeDef.Fields)
+            {
+                typeRefs[i++] = GetLLVMTypeRef(fieldDef.FieldType);
+            }
+            
+            var structTypeRef = LLVM.StructCreateNamed(LLVM.GetGlobalContext(), typeDef.FullName);
+            LLVM.StructSetBody(structTypeRef, typeRefs, false);
+            structureMap.Add(typeDef.FullName, structTypeRef);
+        }
+
         /// <summary>
         /// Gets the LLVM type for the CIL type.
         /// </summary>
@@ -33,11 +48,14 @@ namespace CSharpLLVM
         public LLVMTypeRef GetLLVMTypeRef(TypeReference typeRef)
         {
             var mdt = typeRef.MetadataType;
-            // TODO: support other things than primitives
             if(mdt == MetadataType.Class)
             {
                 // TODO
                 return LLVM.Int64Type();
+            }
+            else if(mdt == MetadataType.ValueType)
+            {
+                return structureMap[typeRef.FullName];
             }
             return typeMap[mdt];
         }
