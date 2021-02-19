@@ -23,14 +23,15 @@ namespace CSharpLLVM
 
             var ret = LLVM.BuildCall(builder, compiler.MethodLookup.GetMethod(methodRef), args, string.Empty);
 
+            if(insn.HasPrefix(Code.Tail))
+                LLVM.SetTailCall(ret, true);
+
             if(methodRef.ReturnType.MetadataType != MetadataType.Void)
             {
                 compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(ret, methodRef.ReturnType.GetTypeInfo()));
             }
 
             // TODO: "this" parameter
-
-            // TODO: tail
         }
     }
 }
