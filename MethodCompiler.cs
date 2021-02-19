@@ -12,6 +12,8 @@ namespace CSharpLLVM
         public LLVMValueRef FunctionValueRef { get; private set; }
         private Compiler compiler;
 
+        public TypeLookup TypeLookup { get { return compiler.TypeLookup; } }
+
         private Dictionary<int, BasicBlock> offsetToBasicBlock = new Dictionary<int, BasicBlock>();
 
         private Dictionary<int, HashSet<int>> outgoingEdges = new Dictionary<int, HashSet<int>>();
@@ -25,9 +27,25 @@ namespace CSharpLLVM
         {
             this.compiler = compiler;
             this.MethodDef = methodDefinition;
-            // TODO
-            LLVMTypeRef[] paramTypes = { LLVM.Int32Type(), LLVM.Int32Type() };
-            var fnType = LLVM.FunctionType(LLVM.Int32Type(), paramTypes, false);
+
+            int offset = methodDefinition.HasThis ? 1 : 0;
+
+            var paramTypes = new LLVMTypeRef[methodDefinition.Parameters.Count + offset];
+            for(int i = 0; i < paramTypes.Length - offset; ++i)
+            {
+                paramTypes[i + offset] = TypeLookup.GetLLVMTypeRef(methodDefinition.Parameters[i].ParameterType);
+            }
+
+            if(methodDefinition.HasThis)
+            {
+                paramTypes[0] = TypeLookup.GetLLVMTypeRef(methodDefinition.DeclaringType);
+            }
+
+            var fnType = LLVM.FunctionType(
+                TypeLookup.GetLLVMTypeRef(methodDefinition.MethodReturnType.ReturnType),
+                paramTypes,
+                false
+            );
             this.FunctionValueRef = LLVM.AddFunction(compiler.ModuleRef, methodDefinition.FullName, fnType);
         }
 

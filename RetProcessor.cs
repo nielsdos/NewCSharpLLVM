@@ -1,4 +1,5 @@
 using LLVMSharp;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace CSharpLLVM
@@ -8,14 +9,14 @@ namespace CSharpLLVM
     {
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
-            // TODO: void
-
-            //if(compiler.MethodDef.ReturnType)
-
-
-            //LLVM.BuildRetVoid(builder);
-
-            LLVM.BuildRet(builder, compiler.CurrentBasicBlock.GetState().StackPop().Value);
+            if(compiler.MethodDef.ReturnType.MetadataType == MetadataType.Void)
+            {
+                LLVM.BuildRetVoid(builder);
+            }
+            else
+            {
+                LLVM.BuildRet(builder, compiler.CurrentBasicBlock.GetState().StackPop().Value);
+            }
         }
     }
 }

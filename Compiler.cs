@@ -10,12 +10,14 @@ namespace CSharpLLVM
         private AssemblyDefinition assemblyDefinition;
         public LLVMModuleRef ModuleRef { get; private set; }
         public InstructionProcessorDispatcher InstructionProcessorDispatcher { get; private set; }
+        public TypeLookup TypeLookup { get; private set; }
 
         public Compiler(AssemblyDefinition assemblyDefinition)
         {
-            this.InstructionProcessorDispatcher = new InstructionProcessorDispatcher();
             this.assemblyDefinition = assemblyDefinition;
             this.ModuleRef = LLVM.ModuleCreateWithName("module");
+            this.InstructionProcessorDispatcher = new InstructionProcessorDispatcher();
+            this.TypeLookup = new TypeLookup();
         }
 
         public void Compile()
