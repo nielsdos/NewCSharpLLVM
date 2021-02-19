@@ -36,7 +36,7 @@ namespace CSharpLLVM
 
             // Optimizations
             LLVM.AddPromoteMemoryToRegisterPass(fnPassManager);
-            /*LLVM.AddInstructionCombiningPass(fnPassManager);
+            LLVM.AddInstructionCombiningPass(fnPassManager);
             LLVM.AddJumpThreadingPass(fnPassManager);
             LLVM.AddEarlyCSEPass(fnPassManager);
             LLVM.AddConstantPropagationPass(fnPassManager);
@@ -69,7 +69,7 @@ namespace CSharpLLVM
             LLVM.AddMergedLoadStoreMotionPass(fnPassManager);
             LLVM.AddSLPVectorizePass(fnPassManager);
             LLVM.AddConstantMergePass(modulePassManager);
-            LLVM.AddConstantMergePass(modulePassManager);*/
+            LLVM.AddConstantMergePass(modulePassManager);
 
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
