@@ -2,6 +2,7 @@ using System;
 using LLVMSharp;
 using Mono.Cecil;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace CSharpLLVM
 {
@@ -73,7 +74,7 @@ namespace CSharpLLVM
             LLVM.AddConstantMergePass(modulePassManager);
             LLVM.AddConstantMergePass(modulePassManager);
 
-            // First, declare all types and only define the types in the next pass.
+            // First, declare all types and only define the types in a later pass.
             // The reason is that we may have cycles of types.
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
@@ -81,20 +82,30 @@ namespace CSharpLLVM
                     TypeLookup.DeclareType(typeDef);
             }
 
+            // Now, we have all types, so we can declare the methods.
+            // Again, we may have cycles so the methods are declared and defined in separate passes.
+            // Also define the types now.
+            var methodCompilerLookup = new Dictionary<MethodDefinition, MethodCompiler>();
+            // TODO: parallellize this
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
-                Console.WriteLine(moduleDef.Name);
-
                 foreach(TypeDefinition typeDef in moduleDef.Types)
                 {
-                    Console.WriteLine("  " + typeDef.Name);
-
                     TypeLookup.DefineType(typeDef);
 
-                    // TODO: move me?
+                    foreach(MethodDefinition methodDef in typeDef.Methods)
+                        methodCompilerLookup.Add(methodDef, new MethodCompiler(this, methodDef));
+                }
+            }
+
+            // Compile the methods.
+            foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
+            {
+                foreach(TypeDefinition typeDef in moduleDef.Types)
+                {
                     foreach(MethodDefinition methodDef in typeDef.Methods)
                     {
-                        var methodCompiler = new MethodCompiler(this, methodDef);
+                        var methodCompiler = methodCompilerLookup[methodDef];
                         methodCompiler.Compile();
 
                         if(!LLVM.VerifyFunction(methodCompiler.FunctionValueRef, LLVMVerifierFailureAction.LLVMPrintMessageAction))
@@ -102,6 +113,9 @@ namespace CSharpLLVM
                     }
                 }
             }
+
+            // Free memory already.
+            methodCompilerLookup.Clear();
 
             Console.WriteLine("-------------------");
 
