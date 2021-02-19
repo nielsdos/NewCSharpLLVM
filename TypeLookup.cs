@@ -27,7 +27,21 @@ namespace CSharpLLVM
             typeMap.Add(MetadataType.Void, LLVM.VoidType());
         }
 
-        public void AddType(TypeDefinition typeDef)
+        /// <summary>
+        /// Declares a type (without a body yet)
+        /// </summary>
+        /// <param name="typeDef">Type definition</param>
+        public void DeclareType(TypeDefinition typeDef)
+        {
+            var structTypeRef = LLVM.StructCreateNamed(LLVM.GetGlobalContext(), typeDef.FullName);
+            structureMap.Add(typeDef.FullName, structTypeRef);
+        }
+
+        /// <summary>
+        /// Defines a type that was previously declared (set the body)
+        /// </summary>
+        /// <param name="typeDef">Type definition</param>
+        public void DefineType(TypeDefinition typeDef)
         {
             LLVMTypeRef[] typeRefs = new LLVMTypeRef[typeDef.Fields.Count];
             uint i = 0;
@@ -37,9 +51,7 @@ namespace CSharpLLVM
                 typeRefs[i++] = GetLLVMTypeRef(fieldDef.FieldType);
             }
             
-            var structTypeRef = LLVM.StructCreateNamed(LLVM.GetGlobalContext(), typeDef.FullName);
-            LLVM.StructSetBody(structTypeRef, typeRefs, false);
-            structureMap.Add(typeDef.FullName, structTypeRef);
+            LLVM.StructSetBody(structureMap[typeDef.FullName], typeRefs, false);
         }
 
         public uint GetOffsetInStructure(FieldReference fieldRef)

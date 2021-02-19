@@ -73,6 +73,14 @@ namespace CSharpLLVM
             LLVM.AddConstantMergePass(modulePassManager);
             LLVM.AddConstantMergePass(modulePassManager);
 
+            // First, declare all types and only define the types in the next pass.
+            // The reason is that we may have cycles of types.
+            foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
+            {
+                foreach(TypeDefinition typeDef in moduleDef.Types)
+                    TypeLookup.DeclareType(typeDef);
+            }
+
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
                 Console.WriteLine(moduleDef.Name);
@@ -81,8 +89,7 @@ namespace CSharpLLVM
                 {
                     Console.WriteLine("  " + typeDef.Name);
 
-                    // TODO: split to seperate pass
-                    TypeLookup.AddType(typeDef);
+                    TypeLookup.DefineType(typeDef);
 
                     // TODO: move me?
                     foreach(MethodDefinition methodDef in typeDef.Methods)
