@@ -11,7 +11,7 @@ namespace CSharpLLVM
     {
         private Dictionary<MetadataType, LLVMTypeRef> typeMap = new Dictionary<MetadataType, LLVMTypeRef>();
         private Dictionary<string, LLVMTypeRef> structureMap = new Dictionary<string, LLVMTypeRef>();
-        private Dictionary<string, uint> offsetMap = new Dictionary<string, uint>();
+        private Dictionary<string, uint> indexMap = new Dictionary<string, uint>();
 
         public TypeLookup()
         {
@@ -47,16 +47,21 @@ namespace CSharpLLVM
             uint i = 0;
             foreach(FieldDefinition fieldDef in typeDef.Fields)
             {
-                offsetMap.Add(fieldDef.FullName, i);
+                indexMap.Add(fieldDef.FullName, i);
                 typeRefs[i++] = GetLLVMTypeRef(fieldDef.FieldType);
             }
             
             LLVM.StructSetBody(structureMap[typeDef.FullName], typeRefs, false);
         }
 
-        public uint GetOffsetInStructure(FieldReference fieldRef)
+        /// <summary>
+        /// Gets the index of a field in a structure.
+        /// </summary>
+        /// <param name="fieldRef">The field.</param>
+        /// <returns>The index</returns>
+        public uint GetIndexInStructure(FieldReference fieldRef)
         {
-            return offsetMap[fieldRef.FullName];
+            return indexMap[fieldRef.FullName];
         }
 
         /// <summary>

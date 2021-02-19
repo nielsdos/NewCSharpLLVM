@@ -13,7 +13,7 @@ namespace CSharpLLVM
             FieldReference fieldRef = (FieldReference) insn.Operand;
             var value = obj.Value;
 
-            uint idx = compiler.TypeLookup.GetOffsetInStructure(fieldRef);
+            uint idx = compiler.TypeLookup.GetIndexInStructure(fieldRef);
 
             LLVMValueRef result;
             if(obj.TypeInfo == TypeInfo.ValueType)
