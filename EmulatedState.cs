@@ -58,17 +58,6 @@ namespace CSharpLLVM
             return value;
         }
 
-        public int LocalCount()
-        {
-            int count = 0;
-            for(int i = 0; i < Locals.Length; ++i)
-            {
-                if(Locals[i] != null)
-                    ++count;
-            }
-            return count;
-        }
-
         public void Merge(LLVMBuilderRef builder, BasicBlock origin)
         {
             var otherState = origin.GetState();
@@ -76,7 +65,7 @@ namespace CSharpLLVM
             if(evaluationStackAtStart.Count != otherState.evaluationStack.Count)
                 throw new InvalidOperationException("Cannot merge stacks with a difference in size");
 
-            for(int i = 0; i < Math.Max(Locals.Length, otherState.Locals.Length); ++i)
+            for(int i = 0; i < LocalsAtStart.Length; ++i)
             {
                 if(otherState.Locals[i] != null && LocalsAtStart[i] != null)
                     LocalsAtStart[i].Merge(builder, origin, otherState.Locals[i]);
