@@ -23,7 +23,7 @@ namespace CSharpLLVM
 
             var valuePtr = compiler.ArgumentValues[index];
             var value = LLVM.BuildLoad(builder, valuePtr, string.Empty);
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, compiler.CurrentBasicBlock));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value));
         }
     }
 }
