@@ -11,6 +11,7 @@ namespace CSharpLLVM
     {
         private Dictionary<MetadataType, LLVMTypeRef> typeMap = new Dictionary<MetadataType, LLVMTypeRef>();
         private Dictionary<string, LLVMTypeRef> structureMap = new Dictionary<string, LLVMTypeRef>();
+        private Dictionary<string, uint> offsetMap = new Dictionary<string, uint>();
 
         public TypeLookup()
         {
@@ -29,15 +30,21 @@ namespace CSharpLLVM
         public void AddType(TypeDefinition typeDef)
         {
             LLVMTypeRef[] typeRefs = new LLVMTypeRef[typeDef.Fields.Count];
-            int i = 0;
+            uint i = 0;
             foreach(FieldDefinition fieldDef in typeDef.Fields)
             {
+                offsetMap.Add(fieldDef.FullName, i);
                 typeRefs[i++] = GetLLVMTypeRef(fieldDef.FieldType);
             }
             
             var structTypeRef = LLVM.StructCreateNamed(LLVM.GetGlobalContext(), typeDef.FullName);
             LLVM.StructSetBody(structTypeRef, typeRefs, false);
             structureMap.Add(typeDef.FullName, structTypeRef);
+        }
+
+        public uint GetOffsetInStructure(FieldReference fieldRef)
+        {
+            return offsetMap[fieldRef.FullName];
         }
 
         /// <summary>
@@ -50,8 +57,7 @@ namespace CSharpLLVM
             var mdt = typeRef.MetadataType;
             if(mdt == MetadataType.Class)
             {
-                // TODO
-                return LLVM.Int64Type();
+                return LLVM.PointerType(structureMap[typeRef.FullName], 0);
             }
             else if(mdt == MetadataType.ValueType)
             {

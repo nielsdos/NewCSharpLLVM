@@ -13,8 +13,8 @@ namespace CSharpLLVM
             int index = def.Index;
 
             var newValue = compiler.CurrentBasicBlock.GetState().StackPop();
-            var valuePtr = compiler.ArgumentValues[index];
-            LLVM.BuildStore(builder, newValue.Value, valuePtr);
+            var arg = compiler.ArgumentValues[index];
+            LLVM.BuildStore(builder, newValue.Value, arg.Value);
         }
     }
 }

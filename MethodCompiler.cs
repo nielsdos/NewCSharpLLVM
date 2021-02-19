@@ -18,7 +18,7 @@ namespace CSharpLLVM
 
         private Dictionary<int, HashSet<int>> outgoingEdges = new Dictionary<int, HashSet<int>>();
 
-        public LLVMValueRef[] ArgumentValues { get; private set; }
+        public EmulatedStateValue[] ArgumentValues { get; private set; }
 
         public BasicBlock CurrentBasicBlock { get; private set; }
         private HashSet<int> processedBlocks = new HashSet<int>();
@@ -91,12 +91,25 @@ namespace CSharpLLVM
             // This includes the setup for arguments.
             LLVM.PositionBuilderAtEnd(builder, offsetToBasicBlock[0].LLVMBlock);
             uint paramCount = LLVM.CountParams(FunctionValueRef);
-            ArgumentValues = new LLVMValueRef[paramCount];
+            ArgumentValues = new EmulatedStateValue[paramCount];
+            int offset = MethodDef.HasThis ? 1 : 0;
             for(uint i = 0; i < paramCount; ++i)
             {
                 LLVMValueRef param = LLVM.GetParam(FunctionValueRef, i);
-                ArgumentValues[i] = LLVM.BuildAlloca(builder, LLVM.TypeOf(param), "arg" + i);
-                LLVM.BuildStore(builder, param, ArgumentValues[i]);
+                var valueRef = LLVM.BuildAlloca(builder, LLVM.TypeOf(param), "arg" + i);
+
+                TypeInfo typeInfo;
+                if(MethodDef.HasThis && i == 0)
+                {
+                    typeInfo = TypeInfo.Reference;
+                }
+                else
+                {
+                    typeInfo = MethodDef.Parameters[(int) i - offset].ParameterType.GetTypeInfo();
+                }
+
+                ArgumentValues[i] = new EmulatedStateValue(valueRef, typeInfo);
+                LLVM.BuildStore(builder, param, valueRef);
             }
 
             // Now, find the basic blocks.
@@ -201,7 +214,7 @@ namespace CSharpLLVM
 
         private void CompileInstruction(Instruction insn, LLVMBuilderRef builder)
         {
-            //Console.WriteLine("  compile " + insn);
+            Console.WriteLine("  compile " + insn);
             compiler.InstructionProcessorDispatcher.Process(this, insn, builder);
         }
     }

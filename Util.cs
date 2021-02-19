@@ -1,9 +1,19 @@
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace CSharpLLVM
 {
     public static class Util
     {
+        public static TypeInfo GetTypeInfo(this TypeReference typeRef)
+        {
+            if(typeRef.IsValueType)
+                return TypeInfo.ValueType;
+            if(typeRef.IsPrimitive)
+                return TypeInfo.Primitive;
+            return TypeInfo.Reference;
+        }
+
         public static bool IsUnconditionalBranchInstruction(this Instruction insn)
         {
             switch(insn.OpCode.Code)

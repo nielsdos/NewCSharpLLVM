@@ -1,19 +1,34 @@
 using LLVMSharp;
+using Mono.Cecil;
 
 namespace CSharpLLVM
 {
+    public enum TypeInfo
+    {
+        ValueType,
+        Primitive,
+        Reference,
+    }
+
     public class EmulatedStateValue
     {
-        // TODO: type
         public LLVMValueRef Value { get; private set; }
+        public TypeInfo TypeInfo { get; private set; }
 
-        public EmulatedStateValue(LLVMValueRef valueRef)
+        public EmulatedStateValue(LLVMValueRef valueRef, TypeInfo typeInfo)
         {
             Value = valueRef;
+            TypeInfo = typeInfo;
+        }
+
+        public EmulatedStateValue(LLVMValueRef valueRef, TypeReference typeRef)
+             : this(valueRef, typeRef.GetTypeInfo())
+        {
         }
 
         public EmulatedStateValue(LLVMBuilderRef builder, BasicBlock origin, EmulatedStateValue otherValue)
         {
+            TypeInfo = otherValue.TypeInfo;
             LLVMValueRef value = otherValue.Value;
             Value = LLVM.BuildPhi(builder, LLVM.TypeOf(value), string.Empty);
             LLVMValueRef[] incoming = { value };
