@@ -14,7 +14,7 @@ namespace CSharpLLVM
 
             var newValue = compiler.CurrentBasicBlock.GetState().StackPop();
             var valuePtr = compiler.ArgumentValues[index];
-            var value = LLVM.BuildStore(builder, newValue.Value, valuePtr);
+            LLVM.BuildStore(builder, newValue.Value, valuePtr);
         }
     }
 }

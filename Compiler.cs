@@ -90,6 +90,8 @@ namespace CSharpLLVM
                 }
             }
 
+            Console.WriteLine("-------------------");
+
             if(LLVM.VerifyModule(ModuleRef, LLVMVerifierFailureAction.LLVMPrintMessageAction, out var outMsg))
             {
                 Console.WriteLine(outMsg);
