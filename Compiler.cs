@@ -75,6 +75,7 @@ namespace CSharpLLVM
             LLVM.AddSLPVectorizePass(fnPassManager);
             LLVM.AddConstantMergePass(modulePassManager);
             LLVM.AddConstantMergePass(modulePassManager);
+            LLVM.AddFunctionInliningPass(modulePassManager);
 
             // First, declare all types and only define the types in a later pass.
             // The reason is that we may have cycles of types.

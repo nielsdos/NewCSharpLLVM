@@ -15,7 +15,6 @@ namespace CSharpLLVM
 
         public TypeLookup()
         {
-            // TODO
             typeMap.Add(MetadataType.Boolean, LLVM.Int1Type());
             typeMap.Add(MetadataType.SByte, LLVM.Int8Type());
             typeMap.Add(MetadataType.Byte, LLVM.Int8Type());
@@ -25,6 +24,7 @@ namespace CSharpLLVM
             typeMap.Add(MetadataType.Single, LLVM.FloatType());
             typeMap.Add(MetadataType.Double, LLVM.DoubleType());
             typeMap.Add(MetadataType.Void, LLVM.VoidType());
+            typeMap.Add(MetadataType.Object, LLVM.PointerType(LLVM.VoidType(), 0));
         }
 
         /// <summary>

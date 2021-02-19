@@ -9,15 +9,38 @@ namespace CSharpLLVM
     /// </summary>
     public sealed class MethodLookup
     {
-        private Dictionary<MethodReference, LLVMValueRef> methodMap = new Dictionary<MethodReference, LLVMValueRef>();
+        // TODO: can we use something better than string?
+        private Dictionary<string, LLVMValueRef> methodMap = new Dictionary<string, LLVMValueRef>();
         private LLVMModuleRef moduleRef;
         private TypeLookup typeLookup;
 
         public MethodLookup(LLVMModuleRef moduleRef, TypeLookup typeLookup)
         {
-            // TODO: make an empty fn for System.Void System.Object::.ctor()
             this.moduleRef = moduleRef;
             this.typeLookup = typeLookup;
+            createSystemObjectCtor();
+        }
+
+        private void createSystemObjectCtor()
+        {
+            var paramTypes = new LLVMTypeRef[] { LLVM.PointerType(LLVM.VoidType(), 0) };
+            var fnType = LLVM.FunctionType(LLVM.VoidType(), paramTypes, false);
+            var valueRef = LLVM.AddFunction(moduleRef, string.Empty, fnType);
+
+            // TODO: maybe put this somewhere else?
+            // TODO: this is somewhat a workaround?
+            /*var asmDef = AssemblyDefinition.ReadAssembly(typeof(object).Assembly.Location);
+            var sysObj = asmDef.MainModule.GetTypes().Where(typeDef => typeDef.FullName == "System.Object").Single();
+            var methodDef = sysObj.Methods.Where(methodDef => methodDef.Name == ".ctor").Single();
+            System.Console.WriteLine(methodDef);
+            methodMap.Add(methodDef., valueRef);*/
+            methodMap.Add("System.Void System.Object::.ctor()", valueRef);
+            
+            var builder = LLVM.CreateBuilder();
+            var block = LLVM.AppendBasicBlock(valueRef, string.Empty);
+            LLVM.PositionBuilderAtEnd(builder, block);
+            LLVM.BuildRetVoid(builder);
+            LLVM.DisposeBuilder(builder);
         }
 
         /// <summary>
@@ -47,7 +70,7 @@ namespace CSharpLLVM
             );
 
             var valueRef = LLVM.AddFunction(moduleRef, methodDef.FullName, fnType);
-            methodMap.Add(methodDef, valueRef);
+            methodMap.Add(methodDef.FullName, valueRef);
 
             return valueRef;
         }
@@ -59,7 +82,7 @@ namespace CSharpLLVM
         /// <returns>The LLVM value reference</returns>
         public LLVMValueRef GetMethod(MethodReference methodRef)
         {
-            return methodMap[methodRef];
+            return methodMap[methodRef.FullName];
         }
     }
 }

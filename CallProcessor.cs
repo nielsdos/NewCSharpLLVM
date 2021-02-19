@@ -11,14 +11,18 @@ namespace CSharpLLVM
         {
             MethodReference methodRef = (MethodReference) insn.Operand;
 
-            // TODO
-            if(methodRef.FullName == "System.Void System.Object::.ctor()")return;
-
-            int argCount = methodRef.Parameters.Count;
+            int offset = methodRef.HasThis ? 1 : 0;
+            int argCount = methodRef.Parameters.Count + offset;
             LLVMValueRef[] args = new LLVMValueRef[argCount];
             for(int i = 0; i < argCount; ++i)
             {
                 args[argCount - i - 1] = compiler.CurrentBasicBlock.GetState().StackPop().Value;
+            }
+
+            if(methodRef.HasThis)
+            {
+                // TODO: don't always do this
+                args[0] = LLVM.BuildPointerCast(builder, args[0], compiler.TypeLookup.GetLLVMTypeRef(methodRef.DeclaringType), string.Empty);
             }
 
             var ret = LLVM.BuildCall(builder, compiler.MethodLookup.GetMethod(methodRef), args, string.Empty);
@@ -30,8 +34,6 @@ namespace CSharpLLVM
             {
                 compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(ret, methodRef.ReturnType.GetTypeInfo()));
             }
-
-            // TODO: "this" parameter
         }
     }
 }

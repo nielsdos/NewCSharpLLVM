@@ -28,7 +28,7 @@ namespace CSharpLLVM
         {
             this.compiler = compiler;
             this.MethodDef = methodDef;
-            this.FunctionValueRef = compiler.MethodLookup.DeclareMethod(methodDef);
+            this.FunctionValueRef = MethodLookup.DeclareMethod(methodDef);
         }
 
         private void AddOutgoingEdge(int from, int to)
