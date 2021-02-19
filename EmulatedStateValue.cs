@@ -6,7 +6,7 @@ namespace CSharpLLVM
     {
         // TODO: type
         public LLVMValueRef Value { get; private set; }
-        public BasicBlock Origin { get; private set; }
+        public BasicBlock Origin { get; private set; } // TODO: can be removed?
 
         public EmulatedStateValue(LLVMValueRef valueRef, BasicBlock origin)
         {
@@ -18,9 +18,9 @@ namespace CSharpLLVM
         {
             Origin = origin;
 
-            LLVMValueRef old = otherValue.Value;
-            Value = LLVM.BuildPhi(builder, LLVM.TypeOf(old), string.Empty);
-            LLVMValueRef[] incoming = { old };
+            LLVMValueRef value = otherValue.Value;
+            Value = LLVM.BuildPhi(builder, LLVM.TypeOf(value), string.Empty);
+            LLVMValueRef[] incoming = { value };
             LLVMBasicBlockRef[] basicBlocks = { origin.LLVMBlock };
             LLVM.AddIncoming(Value, incoming, basicBlocks, 1);
         }
@@ -28,7 +28,7 @@ namespace CSharpLLVM
         public void Merge(LLVMBuilderRef builder, BasicBlock mergingBasicBlock, EmulatedStateValue other)
         {
             LLVMValueRef[] incoming = { other.Value };
-            LLVMBasicBlockRef[] basicBlocks = { other.Origin.LLVMBlock };
+            LLVMBasicBlockRef[] basicBlocks = { /*other.Origin.LLVMBlock*/mergingBasicBlock.LLVMBlock }; // TODO: ??
             LLVM.AddIncoming(Value, incoming, basicBlocks, 1);
         }
     }
