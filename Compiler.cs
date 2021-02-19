@@ -12,6 +12,7 @@ namespace CSharpLLVM
         public LLVMModuleRef ModuleRef { get; private set; }
         public InstructionProcessorDispatcher InstructionProcessorDispatcher { get; private set; }
         public TypeLookup TypeLookup { get; private set; }
+        public MethodLookup MethodLookup { get; private set; }
 
         public Compiler(AssemblyDefinition assemblyDefinition)
         {
@@ -19,6 +20,7 @@ namespace CSharpLLVM
             this.ModuleRef = LLVM.ModuleCreateWithName("module");
             this.InstructionProcessorDispatcher = new InstructionProcessorDispatcher();
             this.TypeLookup = new TypeLookup();
+            this.MethodLookup = new MethodLookup(ModuleRef, TypeLookup);
         }
 
         public void Compile()

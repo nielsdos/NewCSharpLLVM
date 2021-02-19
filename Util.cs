@@ -5,6 +5,11 @@ namespace CSharpLLVM
 {
     public static class Util
     {
+        public static bool HasPrefix(this Instruction insn, Code code)
+        {
+            return insn.Previous != null && insn.Previous.OpCode.Code == code;
+        }
+
         public static TypeInfo GetTypeInfo(this TypeReference typeRef)
         {
             if(typeRef.IsValueType)

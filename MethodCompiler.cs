@@ -13,6 +13,7 @@ namespace CSharpLLVM
         private Compiler compiler;
 
         public TypeLookup TypeLookup { get { return compiler.TypeLookup; } }
+        public MethodLookup MethodLookup { get { return compiler.MethodLookup; } }
 
         private Dictionary<int, BasicBlock> offsetToBasicBlock = new Dictionary<int, BasicBlock>();
 
@@ -23,30 +24,11 @@ namespace CSharpLLVM
         public BasicBlock CurrentBasicBlock { get; private set; }
         private HashSet<int> processedBlocks = new HashSet<int>();
 
-        public MethodCompiler(Compiler compiler, MethodDefinition methodDefinition)
+        public MethodCompiler(Compiler compiler, MethodDefinition methodDef)
         {
             this.compiler = compiler;
-            this.MethodDef = methodDefinition;
-
-            int offset = methodDefinition.HasThis ? 1 : 0;
-
-            var paramTypes = new LLVMTypeRef[methodDefinition.Parameters.Count + offset];
-            for(int i = 0; i < paramTypes.Length - offset; ++i)
-            {
-                paramTypes[i + offset] = TypeLookup.GetLLVMTypeRef(methodDefinition.Parameters[i].ParameterType);
-            }
-
-            if(methodDefinition.HasThis)
-            {
-                paramTypes[0] = TypeLookup.GetLLVMTypeRef(methodDefinition.DeclaringType);
-            }
-
-            var fnType = LLVM.FunctionType(
-                TypeLookup.GetLLVMTypeRef(methodDefinition.MethodReturnType.ReturnType),
-                paramTypes,
-                false
-            );
-            this.FunctionValueRef = LLVM.AddFunction(compiler.ModuleRef, methodDefinition.FullName, fnType);
+            this.MethodDef = methodDef;
+            this.FunctionValueRef = compiler.MethodLookup.DeclareMethod(methodDef);
         }
 
         private void AddOutgoingEdge(int from, int to)

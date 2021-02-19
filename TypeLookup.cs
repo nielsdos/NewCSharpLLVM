@@ -7,7 +7,7 @@ namespace CSharpLLVM
     /// <summary>
     /// Translates CIL types to LLVM types.
     /// </summary>
-    public class TypeLookup
+    public sealed class TypeLookup
     {
         private Dictionary<MetadataType, LLVMTypeRef> typeMap = new Dictionary<MetadataType, LLVMTypeRef>();
         private Dictionary<string, LLVMTypeRef> structureMap = new Dictionary<string, LLVMTypeRef>();

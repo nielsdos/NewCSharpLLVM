@@ -3,8 +3,8 @@ using Mono.Cecil.Cil;
 
 namespace CSharpLLVM
 {
-    [InstructionHandler(Code.Add)]
-    public class AddProcessor : InstructionProcessor
+    [InstructionHandler(Code.Add, Code.Sub)]
+    public class BinaryArithmeticProcessor : InstructionProcessor
     {
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
@@ -13,7 +13,11 @@ namespace CSharpLLVM
 
             var value2 = compiler.CurrentBasicBlock.GetState().StackPop();
             var value1 = compiler.CurrentBasicBlock.GetState().StackPop();
-            var result = LLVM.BuildAdd(builder, value2.Value, value1.Value, string.Empty);
+            LLVMValueRef result;
+            if(insn.OpCode.Code == Code.Add)
+                result = LLVM.BuildAdd(builder, value1.Value, value2.Value, string.Empty);
+            else
+                result = LLVM.BuildSub(builder, value1.Value, value2.Value, string.Empty);
             compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.Primitive));
         }
     }
