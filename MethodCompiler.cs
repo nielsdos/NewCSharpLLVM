@@ -141,7 +141,7 @@ namespace CSharpLLVM
                             var destinationBlock = GetBasicBlock(destination);
                             LLVM.PositionBuilderAtEnd(builder, destinationBlock.LLVMBlock);
                             Console.WriteLine("  Inherit from " + currentBlockIndex.ToString("x") + " -> " + destination.ToString("x"));
-                            destinationBlock.InheritState(builder, CurrentBasicBlock, CurrentBasicBlock.GetState());
+                            destinationBlock.InheritState(builder, CurrentBasicBlock);
                         }
 
                         foreach(int destination in destinations)

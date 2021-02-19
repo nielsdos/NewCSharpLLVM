@@ -20,8 +20,9 @@ namespace CSharpLLVM
             LocalsAtStart = new EmulatedStateValue[localCount];
         }
 
-        public EmulatedState(EmulatedState state, LLVMBuilderRef builder, BasicBlock origin)
+        public EmulatedState(LLVMBuilderRef builder, BasicBlock origin)
         {
+            var state = origin.GetState();
             Locals = new EmulatedStateValue[state.Locals.Length];
             LocalsAtStart = new EmulatedStateValue[state.Locals.Length];
             for(int i = 0; i < Locals.Length; ++i)
@@ -68,25 +69,22 @@ namespace CSharpLLVM
             return count;
         }
 
-        public void Merge(LLVMBuilderRef builder, BasicBlock mergingBasicBlock, EmulatedState otherState)
+        public void Merge(LLVMBuilderRef builder, BasicBlock origin)
         {
+            var otherState = origin.GetState();
+
             if(evaluationStackAtStart.Count != otherState.evaluationStack.Count)
                 throw new InvalidOperationException("Cannot merge stacks with a difference in size");
 
             for(int i = 0; i < Math.Max(Locals.Length, otherState.Locals.Length); ++i)
             {
-                if(otherState.Locals[i] == null)
-                    continue;
-
-                //Console.WriteLine("    Inheriting local " + i);
-
-                if(LocalsAtStart[i] != null)
-                    LocalsAtStart[i].Merge(builder, mergingBasicBlock, otherState.Locals[i]);
+                if(otherState.Locals[i] != null && LocalsAtStart[i] != null)
+                    LocalsAtStart[i].Merge(builder, origin, otherState.Locals[i]);
             }
 
             for(int i = 0; i < evaluationStackAtStart.Count; ++i)
             {
-                evaluationStackAtStart[i].Merge(builder, mergingBasicBlock, otherState.evaluationStack[i]);
+                evaluationStackAtStart[i].Merge(builder, origin, otherState.evaluationStack[i]);
             }
         }
     }

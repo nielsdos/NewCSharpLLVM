@@ -23,15 +23,15 @@ namespace CSharpLLVM
             return state;
         }
 
-        public void InheritState(LLVMBuilderRef builder, BasicBlock origin, EmulatedState inheritedState)
+        public void InheritState(LLVMBuilderRef builder, BasicBlock origin)
         {
             if(state == null)
             {
-                state = new EmulatedState(inheritedState, builder, origin);
+                state = new EmulatedState(builder, origin);
             }
             else
             {
-                state.Merge(builder, origin, inheritedState);
+                state.Merge(builder, origin);
             }
         }
     }
