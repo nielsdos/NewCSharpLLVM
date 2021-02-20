@@ -14,7 +14,7 @@ namespace CSharpLLVM
                 result = ProcessFloating(compiler, value1.Value, value2.Value, builder);
             else
                 result = ProcessIntegral(compiler, value1.Value, value2.Value, builder);
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.IntegralPrimitive));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, value1.TypeInfo));
         }
 
         protected abstract LLVMValueRef ProcessIntegral(MethodCompiler compiler, LLVMValueRef lhs, LLVMValueRef rhs, LLVMBuilderRef builder);
