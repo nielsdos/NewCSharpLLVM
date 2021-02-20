@@ -24,6 +24,7 @@ namespace CSharpLLVM
 
         public EmulatedStateValue(LLVMValueRef valueRef, TypeReference typeRef, LLVMBuilderRef builder)
         {
+            // Stack conversions as required by the CIL spec.
             var mdt = typeRef.MetadataType;
             if(mdt == MetadataType.Byte || mdt == MetadataType.UInt16 || mdt == MetadataType.Boolean || mdt == MetadataType.Char)
             {
