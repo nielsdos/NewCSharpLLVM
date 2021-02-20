@@ -21,9 +21,20 @@ namespace CSharpLLVM
             TypeInfo = typeInfo;
         }
 
-        public EmulatedStateValue(LLVMValueRef valueRef, TypeReference typeRef)
-             : this(valueRef, typeRef.GetTypeInfo())
+        public EmulatedStateValue(LLVMValueRef valueRef, TypeReference typeRef, LLVMBuilderRef builder)
         {
+            var mdt = typeRef.MetadataType;
+            if(mdt == MetadataType.Byte || mdt == MetadataType.UInt16 || mdt == MetadataType.Boolean || mdt == MetadataType.Char)
+            {
+                valueRef = LLVM.BuildZExt(builder, valueRef, LLVM.Int32Type(), string.Empty);
+            }
+            else if(mdt == MetadataType.SByte || mdt == MetadataType.Int16)
+            {
+                valueRef = LLVM.BuildSExt(builder, valueRef, LLVM.Int32Type(), string.Empty);
+            }
+
+            Value = valueRef;
+            TypeInfo = typeRef.GetTypeInfo();
         }
 
         public EmulatedStateValue(LLVMBuilderRef builder, BasicBlock origin, EmulatedStateValue otherValue)

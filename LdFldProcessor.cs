@@ -28,7 +28,7 @@ namespace CSharpLLVM
                 result = LLVM.BuildLoad(builder, gep, string.Empty);
             }
 
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, fieldRef.FieldType));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, fieldRef.FieldType, builder));
         }
     }
 }

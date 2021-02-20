@@ -8,9 +8,6 @@ namespace CSharpLLVM
     {
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
-            // TODO: correctly handle overflow
-            // TODO: correctly handle typings (see conversion table)
-
             var value2 = compiler.CurrentBasicBlock.GetState().StackPop();
             var value1 = compiler.CurrentBasicBlock.GetState().StackPop();
             LLVMValueRef result;
