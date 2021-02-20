@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Mono.Cecil;
 using LLVMSharp;
+using System.Diagnostics;
 
 namespace CSharpLLVM
 {
@@ -43,15 +44,32 @@ namespace CSharpLLVM
         /// <param name="typeDef">Type definition</param>
         public void DefineType(TypeDefinition typeDef)
         {
-            LLVMTypeRef[] typeRefs = new LLVMTypeRef[typeDef.Fields.Count];
-            uint i = 0;
-            foreach(FieldDefinition fieldDef in typeDef.Fields)
-            {
-                indexMap.Add(fieldDef.FullName, i);
-                typeRefs[i++] = GetLLVMTypeRef(fieldDef.FieldType);
+            List<LLVMTypeRef> typeRefs = new List<LLVMTypeRef>();
+
+            void AddFields(TypeDefinition typeDef, ref uint i) {
+                //System.Console.WriteLine(typeDef + " " + typeDef.BaseType);
+                if(typeDef.BaseType != null)
+                    AddFields(typeDef.BaseType.Resolve(), ref i);
+                
+                foreach(FieldDefinition fieldDef in typeDef.Fields)
+                {
+                    if(indexMap.TryGetValue(fieldDef.FullName, out var check))
+                    {
+                        Debug.Assert(i == check);
+                    }
+                    else
+                    {
+                        indexMap[fieldDef.FullName] = i;
+                    }
+                    ++i;
+                    typeRefs.Add(GetLLVMTypeRef(fieldDef.FieldType));
+                }
             }
+
+            uint i = 0;
+            AddFields(typeDef, ref i);
             
-            LLVM.StructSetBody(structureMap[typeDef.FullName], typeRefs, false);
+            LLVM.StructSetBody(structureMap[typeDef.FullName], typeRefs.ToArray(), false);
         }
 
         /// <summary>
