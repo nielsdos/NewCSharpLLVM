@@ -14,6 +14,8 @@ namespace CSharpLLVM
         private Dictionary<string, LLVMTypeRef> structureMap = new Dictionary<string, LLVMTypeRef>();
         private Dictionary<string, uint> indexMap = new Dictionary<string, uint>();
 
+        public LLVMTypeRef NativeInt { get; private set; } = LLVM.Int64Type(); // TODO: make dependent on platform
+
         public TypeLookup()
         {
             typeMap.Add(MetadataType.Boolean, LLVM.Int1Type());
@@ -26,6 +28,8 @@ namespace CSharpLLVM
             typeMap.Add(MetadataType.Double, LLVM.DoubleType());
             typeMap.Add(MetadataType.Void, LLVM.VoidType());
             typeMap.Add(MetadataType.Object, LLVM.PointerType(LLVM.VoidType(), 0));
+            typeMap.Add(MetadataType.IntPtr, NativeInt);
+            typeMap.Add(MetadataType.UIntPtr, NativeInt);
         }
 
         /// <summary>
