@@ -12,7 +12,10 @@ namespace CSharpLLVM
             var value1 = compiler.CurrentBasicBlock.GetState().StackPop();
             LLVMValueRef result;
             if(insn.OpCode.Code == Code.Add)
-                result = LLVM.BuildAdd(builder, value1.Value, value2.Value, string.Empty);
+                if(value1.TypeInfo == TypeInfo.FloatingPrimitive)
+                    result = LLVM.BuildFAdd(builder, value1.Value, value2.Value, string.Empty);
+                else
+                    result = LLVM.BuildAdd(builder, value1.Value, value2.Value, string.Empty);
             else if(insn.OpCode.Code == Code.Mul)
                 result = LLVM.BuildMul(builder, value1.Value, value2.Value, string.Empty);
             else if(insn.OpCode.Code == Code.Div)
@@ -21,7 +24,7 @@ namespace CSharpLLVM
                 result = LLVM.BuildUDiv(builder, value1.Value, value2.Value, string.Empty);
             else
                 result = LLVM.BuildSub(builder, value1.Value, value2.Value, string.Empty);
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.Primitive));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.IntegralPrimitive));
         }
     }
 }

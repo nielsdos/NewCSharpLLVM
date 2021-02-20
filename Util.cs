@@ -12,10 +12,15 @@ namespace CSharpLLVM
 
         public static TypeInfo GetTypeInfo(this TypeReference typeRef)
         {
+            if(typeRef.IsPrimitive)
+            {
+                if(typeRef.MetadataType == MetadataType.Single || typeRef.MetadataType == MetadataType.Double)
+                    return TypeInfo.FloatingPrimitive;
+                else
+                    return TypeInfo.IntegralPrimitive;
+            }
             if(typeRef.IsValueType)
                 return TypeInfo.ValueType;
-            if(typeRef.IsPrimitive)
-                return TypeInfo.Primitive;
             return TypeInfo.Reference;
         }
 

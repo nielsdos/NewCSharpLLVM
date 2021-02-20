@@ -6,7 +6,8 @@ namespace CSharpLLVM
     public enum TypeInfo
     {
         ValueType,
-        Primitive,
+        IntegralPrimitive,
+        FloatingPrimitive,
         Reference,
     }
 
