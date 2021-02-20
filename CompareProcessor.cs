@@ -9,12 +9,15 @@ namespace CSharpLLVM
     {
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
-            // TODO: support correct typing
-            
             var value2 = compiler.CurrentBasicBlock.GetState().StackPop();
             var value1 = compiler.CurrentBasicBlock.GetState().StackPop();
 
-            var result = LLVM.BuildICmp(builder, GetIntPredicateFromCode(insn.OpCode.Code), value1.Value, value2.Value, string.Empty);
+            LLVMValueRef result;
+            if(value1.TypeInfo == TypeInfo.FloatingPrimitive)
+                result = LLVM.BuildFCmp(builder, GetFloatPredicateFromCode(insn.OpCode.Code), value1.Value, value2.Value, string.Empty);
+            else
+                result = LLVM.BuildICmp(builder, GetIntPredicateFromCode(insn.OpCode.Code), value1.Value, value2.Value, string.Empty);
+
             compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.IntegralPrimitive));
         }
 
@@ -36,6 +39,30 @@ namespace CSharpLLVM
 
                 case Code.Cgt_Un:
                     return LLVMIntPredicate.LLVMIntUGT;
+
+                default:
+                    throw new InvalidOperationException("Unexpected code " + code);
+            }
+        }
+
+        private LLVMRealPredicate GetFloatPredicateFromCode(Code code)
+        {
+            switch (code)
+            {
+                case Code.Clt:
+                    return LLVMRealPredicate.LLVMRealOLT;
+
+                case Code.Clt_Un:
+                    return LLVMRealPredicate.LLVMRealULT;
+
+                case Code.Ceq:
+                    return LLVMRealPredicate.LLVMRealOEQ;
+
+                case Code.Cgt:
+                    return LLVMRealPredicate.LLVMRealOGT;
+
+                case Code.Cgt_Un:
+                    return LLVMRealPredicate.LLVMRealUGT;
 
                 default:
                     throw new InvalidOperationException("Unexpected code " + code);
