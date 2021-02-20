@@ -1,6 +1,7 @@
 using LLVMSharp;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System.Diagnostics;
 
 namespace CSharpLLVM
 {
@@ -17,6 +18,8 @@ namespace CSharpLLVM
             {
                 LLVM.BuildRet(builder, compiler.CurrentBasicBlock.GetState().StackPop().Value);
             }
+
+            Debug.Assert(compiler.CurrentBasicBlock.GetState().StackSize == 0);
         }
     }
 }
