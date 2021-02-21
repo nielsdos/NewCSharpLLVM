@@ -22,7 +22,10 @@ namespace CSharpLLVM
             if(methodRef.HasThis)
             {
                 // TODO: don't always do this
-                args[0] = LLVM.BuildPointerCast(builder, args[0], compiler.TypeLookup.GetLLVMTypeRef(methodRef.DeclaringType), string.Empty);
+                var newType = compiler.TypeLookup.GetLLVMTypeRef(methodRef.DeclaringType);
+                if(methodRef.DeclaringType.IsValueType)
+                    newType = LLVM.PointerType(newType, 0);
+                args[0] = LLVM.BuildPointerCast(builder, args[0], newType, string.Empty);
             }
 
             var ret = LLVM.BuildCall(builder, compiler.MethodLookup.GetMethod(methodRef), args, string.Empty);

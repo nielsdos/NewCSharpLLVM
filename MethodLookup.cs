@@ -61,6 +61,8 @@ namespace CSharpLLVM
             if(methodDef.HasThis)
             {
                 paramTypes[0] = typeLookup.GetLLVMTypeRef(methodDef.DeclaringType);
+                if(methodDef.DeclaringType.IsValueType)
+                    paramTypes[0] = LLVM.PointerType(paramTypes[0], 0);
             }
 
             var fnType = LLVM.FunctionType(
