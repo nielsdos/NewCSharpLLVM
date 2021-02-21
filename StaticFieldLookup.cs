@@ -4,6 +4,9 @@ using LLVMSharp;
 
 namespace CSharpLLVM
 {
+    /// <summary>
+    /// Keeps track of the CIL static fields -> LLVM value refs.
+    /// </summary>
     public sealed class StaticFieldLookup
     {
         private Dictionary<FieldReference, LLVMValueRef> fieldMap = new Dictionary<FieldReference, LLVMValueRef>();
