@@ -100,7 +100,7 @@ namespace CSharpLLVM
             {
                 return LLVM.PointerType(structureMap[typeRef.FullName], 0);
             }
-            else if(mdt == MetadataType.ByReference)
+            else if(mdt == MetadataType.ByReference || mdt == MetadataType.Array)
             {
                 return LLVM.PointerType(GetLLVMTypeRef(typeRef.GetElementType()), 0);
             }
