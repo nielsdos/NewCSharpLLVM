@@ -60,6 +60,10 @@ namespace CSharpLLVM
                 
                 foreach(FieldDefinition fieldDef in typeDef.Fields)
                 {
+                    // Static fields are handled separately outside this type.
+                    if(fieldDef.IsStatic)
+                        continue;
+
                     if(indexMap.TryGetValue(fieldDef.FullName, out var check))
                     {
                         Debug.Assert(i == check);
