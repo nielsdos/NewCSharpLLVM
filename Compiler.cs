@@ -111,7 +111,7 @@ namespace CSharpLLVM
             // Compile the methods.
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
-                foreach(TypeDefinition typeDef in moduleDef.Types)
+                RecurseTypes(moduleDef.Types, typeDef =>
                 {
                     foreach(MethodDefinition methodDef in typeDef.Methods)
                     {
@@ -121,7 +121,7 @@ namespace CSharpLLVM
                         if(!LLVM.VerifyFunction(methodCompiler.FunctionValueRef, LLVMVerifierFailureAction.LLVMPrintMessageAction))
                             LLVM.RunFunctionPassManager(fnPassManager, methodCompiler.FunctionValueRef);
                     }
-                }
+                });
             }
 
             // Free memory already.
