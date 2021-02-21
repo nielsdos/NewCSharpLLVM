@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using LLVMSharp;
 using Mono.Cecil;
 using System.Runtime.InteropServices;
@@ -89,40 +90,40 @@ namespace CSharpLLVM
 
             // First, declare all types and only define the types in a later pass.
             // The reason is that we may have cycles of types.
+            var typeList = new List<TypeDefinition>();
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
-                RecurseTypes(moduleDef.Types, typeDef => TypeLookup.DeclareType(typeDef));
+                RecurseTypes(moduleDef.Types, typeDef =>
+                {
+                    typeList.Add(typeDef);
+                    TypeLookup.DeclareType(typeDef);
+                });
 
             // Now, we have all types, so we can declare the methods.
             // Again, we may have cycles so the methods are declared and defined in separate passes.
             // Also define the types now.
             var methodCompilerLookup = new Dictionary<MethodDefinition, MethodCompiler>();
-            // TODO: parallellize this
-            foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
+            
+            foreach(var typeDef in typeList)
             {
-                RecurseTypes(moduleDef.Types, typeDef =>
-                {
-                    TypeLookup.DefineType(typeDef);
+                TypeLookup.DefineType(typeDef);
 
-                    foreach(MethodDefinition methodDef in typeDef.Methods)
-                        methodCompilerLookup.Add(methodDef, new MethodCompiler(this, methodDef));
-                });
+                foreach(MethodDefinition methodDef in typeDef.Methods)
+                    methodCompilerLookup.Add(methodDef, new MethodCompiler(this, methodDef));
             }
 
             // Compile the methods.
-            foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
+            //Parallel.ForEach(typeList, typeDef =>
+            typeList.ForEach(typeDef => // TODO: parallell crashes LLVM?
             {
-                RecurseTypes(moduleDef.Types, typeDef =>
+                foreach(MethodDefinition methodDef in typeDef.Methods)
                 {
-                    foreach(MethodDefinition methodDef in typeDef.Methods)
-                    {
-                        var methodCompiler = methodCompilerLookup[methodDef];
-                        methodCompiler.Compile();
+                    var methodCompiler = methodCompilerLookup[methodDef];
+                    methodCompiler.Compile();
 
-                        if(!LLVM.VerifyFunction(methodCompiler.FunctionValueRef, LLVMVerifierFailureAction.LLVMPrintMessageAction))
-                            LLVM.RunFunctionPassManager(fnPassManager, methodCompiler.FunctionValueRef);
-                    }
-                });
-            }
+                    if(!LLVM.VerifyFunction(methodCompiler.FunctionValueRef, LLVMVerifierFailureAction.LLVMPrintMessageAction))
+                        LLVM.RunFunctionPassManager(fnPassManager, methodCompiler.FunctionValueRef);
+                }
+            });
 
             // Free memory already.
             methodCompilerLookup.Clear();
