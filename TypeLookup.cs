@@ -54,7 +54,6 @@ namespace CSharpLLVM
             List<LLVMTypeRef> typeRefs = new List<LLVMTypeRef>();
 
             void AddFields(TypeDefinition typeDef, ref uint i) {
-                //System.Console.WriteLine(typeDef + " " + typeDef.BaseType);
                 if(typeDef.BaseType != null)
                     AddFields(typeDef.BaseType.Resolve(), ref i);
                 
@@ -64,13 +63,9 @@ namespace CSharpLLVM
                     if(fieldDef.IsStatic)
                         continue;
 
-                    if(indexMap.TryGetValue(fieldDef.FullName, out var check))
+                    if(!indexMap.TryAdd(fieldDef.FullName, i))
                     {
-                        Debug.Assert(i == check);
-                    }
-                    else
-                    {
-                        indexMap[fieldDef.FullName] = i;
+                        Debug.Assert(indexMap[fieldDef.FullName] == i);
                     }
                     ++i;
                     typeRefs.Add(GetLLVMTypeRef(fieldDef.FieldType));
