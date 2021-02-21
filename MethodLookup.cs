@@ -96,7 +96,7 @@ namespace CSharpLLVM
             var valueRef = LLVM.AddFunction(moduleRef, methodDef.FullName, fnType);
             methodMap.Add(methodDef.FullName, valueRef);
 
-            if(methodDef.Name == ".cctor")
+            if(methodDef.IsConstructor && methodDef.IsStatic)
             {
                 LLVM.SetLinkage(valueRef, LLVMLinkage.LLVMInternalLinkage);
                 LLVM.BuildCall(cctorCallBuilder, valueRef, new LLVMValueRef[0], string.Empty);
