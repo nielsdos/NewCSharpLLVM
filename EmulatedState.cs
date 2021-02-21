@@ -58,6 +58,12 @@ namespace CSharpLLVM
             return value;
         }
 
+        public EmulatedStateValue StackPeek()
+        {
+            int index = evaluationStack.Count - 1;
+            return evaluationStack[index];
+        }
+
         public void Merge(LLVMBuilderRef builder, BasicBlock origin)
         {
             var otherState = origin.GetState();

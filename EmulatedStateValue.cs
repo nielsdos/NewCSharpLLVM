@@ -23,6 +23,9 @@ namespace CSharpLLVM
             TypeInfo = typeInfo;
         }
 
+        public EmulatedStateValue(EmulatedStateValue other)
+            : this(other.Value, other.TypeInfo) {}
+
         public EmulatedStateValue(LLVMValueRef valueRef, TypeReference typeRef, LLVMBuilderRef builder)
         {
             // Stack conversions as required by the CIL spec.
