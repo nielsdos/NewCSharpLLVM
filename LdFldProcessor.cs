@@ -16,7 +16,7 @@ namespace CSharpLLVM
             uint idx = compiler.TypeLookup.GetIndexInStructure(fieldRef);
 
             LLVMValueRef result;
-            if(obj.TypeInfo == TypeInfo.ValueType)
+            if(obj.TypeInfo == TypeInfo.Structure)
             {
                 // This is a value type, directly go with extracting the value.
                 result = LLVM.BuildExtractValue(builder, value, idx, string.Empty);

@@ -18,7 +18,7 @@ namespace CSharpLLVM
             else
                 result = LLVM.BuildICmp(builder, GetIntPredicateFromCode(insn.OpCode.Code), value1.Value, value2.Value, string.Empty);
 
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.IntegralPrimitive));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(result, TypeInfo.SiIntPrimitive));
         }
 
         private LLVMIntPredicate GetIntPredicateFromCode(Code code)

@@ -50,7 +50,7 @@ namespace CSharpLLVM
                 }
             }
 
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, TypeInfo.IntegralPrimitive));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, TypeInfo.SiIntPrimitive));
         }
     }
 }

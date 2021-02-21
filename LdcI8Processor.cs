@@ -13,7 +13,7 @@ namespace CSharpLLVM
             {
                 value = LLVM.ConstInt(LLVM.Int64Type(), (ulong)(long)insn.Operand, false);
             }
-            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, TypeInfo.IntegralPrimitive));
+            compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(value, TypeInfo.SiIntPrimitive));
         }
     }
 }

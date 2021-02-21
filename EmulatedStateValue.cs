@@ -3,10 +3,11 @@ using Mono.Cecil;
 
 namespace CSharpLLVM
 {
-    public enum TypeInfo
+    public enum TypeInfo : byte
     {
-        ValueType,
-        IntegralPrimitive,
+        Structure,
+        SiIntPrimitive,
+        UnIntPrimitive,
         FloatingPrimitive,
         Reference,
     }

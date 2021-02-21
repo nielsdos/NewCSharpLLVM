@@ -17,10 +17,10 @@ namespace CSharpLLVM
                 if(typeRef.MetadataType == MetadataType.Single || typeRef.MetadataType == MetadataType.Double)
                     return TypeInfo.FloatingPrimitive;
                 else
-                    return TypeInfo.IntegralPrimitive;
+                    return TypeInfo.SiIntPrimitive;
             }
             if(typeRef.IsValueType)
-                return TypeInfo.ValueType;
+                return TypeInfo.Structure;
             return TypeInfo.Reference;
         }
 
