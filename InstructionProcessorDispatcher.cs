@@ -8,11 +8,11 @@ namespace CSharpLLVM
 {
     public class InstructionProcessorDispatcher
     {
-        private Dictionary<Code, InstructionProcessor> mEmitters = new Dictionary<Code, InstructionProcessor>();
+        private Dictionary<Code, InstructionProcessor> processors = new Dictionary<Code, InstructionProcessor>();
 
         public InstructionProcessorDispatcher()
         {
-            // Load code emitters.
+            // Load code processors.
             Type[] types = Assembly.GetExecutingAssembly().GetTypes();
             foreach (Type type in types)
             {
@@ -24,7 +24,7 @@ namespace CSharpLLVM
                 // Register emitter.
                 var emitter = (InstructionProcessor) Activator.CreateInstance(type);
                 foreach (Code code in attrib.Codes)
-                    mEmitters.Add(code, emitter);
+                    processors.Add(code, emitter);
             }
         }
 
@@ -36,7 +36,7 @@ namespace CSharpLLVM
         /// <param name="builder">The builder.</param>
         public void Process(MethodCompiler compiler, Instruction insn, LLVMBuilderRef builder)
         {
-            if (mEmitters.TryGetValue(insn.OpCode.Code, out var processor))
+            if (processors.TryGetValue(insn.OpCode.Code, out var processor))
             {
                 processor.Process(compiler, insn, builder);
             }
