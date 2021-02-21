@@ -3,6 +3,7 @@ using LLVMSharp;
 using Mono.Cecil;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using Mono.Collections.Generic;
 
 namespace CSharpLLVM
 {
@@ -77,13 +78,19 @@ namespace CSharpLLVM
             LLVM.AddConstantMergePass(modulePassManager);
             LLVM.AddFunctionInliningPass(modulePassManager);
 
+            void RecurseTypes(Collection<TypeDefinition> collection, Action<TypeDefinition> callback)
+            {
+                foreach(TypeDefinition typeDef in collection)
+                {
+                    callback(typeDef);
+                    RecurseTypes(typeDef.NestedTypes, callback);
+                }
+            }
+
             // First, declare all types and only define the types in a later pass.
             // The reason is that we may have cycles of types.
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
-            {
-                foreach(TypeDefinition typeDef in moduleDef.Types)
-                    TypeLookup.DeclareType(typeDef);
-            }
+                RecurseTypes(moduleDef.Types, typeDef => TypeLookup.DeclareType(typeDef));
 
             // Now, we have all types, so we can declare the methods.
             // Again, we may have cycles so the methods are declared and defined in separate passes.
@@ -92,13 +99,13 @@ namespace CSharpLLVM
             // TODO: parallellize this
             foreach(ModuleDefinition moduleDef in assemblyDefinition.Modules)
             {
-                foreach(TypeDefinition typeDef in moduleDef.Types)
+                RecurseTypes(moduleDef.Types, typeDef =>
                 {
                     TypeLookup.DefineType(typeDef);
 
                     foreach(MethodDefinition methodDef in typeDef.Methods)
                         methodCompilerLookup.Add(methodDef, new MethodCompiler(this, methodDef));
-                }
+                });
             }
 
             // Compile the methods.
