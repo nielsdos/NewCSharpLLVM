@@ -14,11 +14,33 @@ namespace CSharpLLVM
         private LLVMModuleRef moduleRef;
         private TypeLookup typeLookup;
 
+        private LLVMBuilderRef cctorCallBuilder;
+
         public MethodLookup(LLVMModuleRef moduleRef, TypeLookup typeLookup)
         {
             this.moduleRef = moduleRef;
             this.typeLookup = typeLookup;
             createSystemObjectCtor();
+            createCctorCaller();
+        }
+
+        ~MethodLookup()
+        {
+            LLVM.DisposeBuilder(cctorCallBuilder);
+        }
+
+        public void Finish()
+        {
+            LLVM.BuildRetVoid(cctorCallBuilder);
+        }
+
+        private void createCctorCaller()
+        {
+            cctorCallBuilder = LLVM.CreateBuilder();
+            var fnType = LLVM.FunctionType(LLVM.VoidType(), new LLVMTypeRef[0], false);
+            var fn = LLVM.AddFunction(moduleRef, "cctor_caller", fnType);
+            var basicBlock = LLVM.AppendBasicBlock(fn, string.Empty);
+            LLVM.PositionBuilderAtEnd(cctorCallBuilder, basicBlock);
         }
 
         private void createSystemObjectCtor()
@@ -73,6 +95,12 @@ namespace CSharpLLVM
 
             var valueRef = LLVM.AddFunction(moduleRef, methodDef.FullName, fnType);
             methodMap.Add(methodDef.FullName, valueRef);
+
+            if(methodDef.Name == ".cctor")
+            {
+                LLVM.SetLinkage(valueRef, LLVMLinkage.LLVMInternalLinkage);
+                LLVM.BuildCall(cctorCallBuilder, valueRef, new LLVMValueRef[0], string.Empty);
+            }
 
             return valueRef;
         }

@@ -129,6 +129,7 @@ namespace CSharpLLVM
             });
 
             // Free memory already.
+            MethodLookup.Finish();
             methodCompilerLookup.Clear();
 
             Console.WriteLine("-------------------");
