@@ -14,6 +14,7 @@ namespace CSharpLLVM
 
         public TypeLookup TypeLookup { get { return compiler.TypeLookup; } }
         public MethodLookup MethodLookup { get { return compiler.MethodLookup; } }
+        public StaticFieldLookup StaticFieldLookup { get { return compiler.StaticFieldLookup; } }
 
         private Dictionary<int, BasicBlock> offsetToBasicBlock = new Dictionary<int, BasicBlock>();
 

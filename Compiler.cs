@@ -14,6 +14,7 @@ namespace CSharpLLVM
         public LLVMModuleRef ModuleRef { get; private set; }
         public InstructionProcessorDispatcher InstructionProcessorDispatcher { get; private set; }
         public TypeLookup TypeLookup { get; private set; }
+        public StaticFieldLookup StaticFieldLookup { get; private set; }
         public MethodLookup MethodLookup { get; private set; }
 
         public Compiler(AssemblyDefinition assemblyDefinition)
@@ -22,6 +23,7 @@ namespace CSharpLLVM
             this.ModuleRef = LLVM.ModuleCreateWithName("module");
             this.InstructionProcessorDispatcher = new InstructionProcessorDispatcher();
             this.TypeLookup = new TypeLookup();
+            this.StaticFieldLookup = new StaticFieldLookup(ModuleRef, TypeLookup);
             this.MethodLookup = new MethodLookup(ModuleRef, TypeLookup);
         }
 
@@ -106,6 +108,7 @@ namespace CSharpLLVM
             foreach(var typeDef in typeList)
             {
                 TypeLookup.DefineType(typeDef);
+                StaticFieldLookup.DeclareFieldsFor(typeDef);
 
                 foreach(MethodDefinition methodDef in typeDef.Methods)
                     methodCompilerLookup.Add(methodDef, new MethodCompiler(this, methodDef));
