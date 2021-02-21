@@ -24,6 +24,9 @@ namespace CSharpLLVM
             typeMap.Add(MetadataType.Int16, LLVM.Int16Type());
             typeMap.Add(MetadataType.Int32, LLVM.Int32Type());
             typeMap.Add(MetadataType.Int64, LLVM.Int64Type());
+            typeMap.Add(MetadataType.UInt16, LLVM.Int16Type());
+            typeMap.Add(MetadataType.UInt32, LLVM.Int32Type());
+            typeMap.Add(MetadataType.UInt64, LLVM.Int64Type());
             typeMap.Add(MetadataType.Single, LLVM.FloatType());
             typeMap.Add(MetadataType.Double, LLVM.DoubleType());
             typeMap.Add(MetadataType.Void, LLVM.VoidType());
