@@ -19,10 +19,10 @@ namespace CSharpLLVM
             this.FirstInstructionRef = firstInstructionRef;
         }
 
-        public EmulatedState GetState()
+        public EmulatedState GetState() // TODO: get rid of this?
         {
             if(state == null)
-                state = new EmulatedState(compiler.MethodDef.Body.Variables.Count);
+                state = new EmulatedState();
             return state;
         }
 

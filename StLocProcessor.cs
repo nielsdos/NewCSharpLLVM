@@ -21,7 +21,8 @@ namespace CSharpLLVM
                 index = def.Index;
             }
 
-            compiler.CurrentBasicBlock.GetState().Locals[index] = compiler.CurrentBasicBlock.GetState().StackPop();
+            var value = compiler.CurrentBasicBlock.GetState().StackPop();
+            LLVM.BuildStore(builder, value.Value, compiler.LocalValues[index].Value);
         }
     }
 }

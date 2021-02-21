@@ -20,6 +20,7 @@ namespace CSharpLLVM
         private Dictionary<int, HashSet<int>> outgoingEdges = new Dictionary<int, HashSet<int>>();
 
         public EmulatedStateValue[] ArgumentValues { get; private set; }
+        public EmulatedStateValue[] LocalValues { get; private set; }
 
         public BasicBlock CurrentBasicBlock { get; private set; }
         private HashSet<int> processedBlocks = new HashSet<int>();
@@ -69,8 +70,7 @@ namespace CSharpLLVM
                 AddBasicBlockAt(it.Current);
             }
 
-            // Generate the entry point code.
-            // This includes the setup for arguments.
+            // Generate the entry point code for arguments.
             LLVM.PositionBuilderAtEnd(builder, offsetToBasicBlock[0].LLVMBlock);
             uint paramCount = LLVM.CountParams(FunctionValueRef);
             ArgumentValues = new EmulatedStateValue[paramCount];
@@ -92,6 +92,18 @@ namespace CSharpLLVM
 
                 ArgumentValues[i] = new EmulatedStateValue(valueRef, typeInfo);
                 LLVM.BuildStore(builder, param, valueRef);
+            }
+
+            // Generate the entry point code for locals.
+            {
+                var locals = MethodDef.Body.Variables;
+                LocalValues = new EmulatedStateValue[locals.Count];
+                for(int i = 0; i < locals.Count; ++i)
+                {
+                    var cilType = locals[i].VariableType;
+                    var valueRef = LLVM.BuildAlloca(builder, TypeLookup.GetLLVMTypeRef(cilType), "local" + i);
+                    LocalValues[i] = new EmulatedStateValue(valueRef, cilType.GetTypeInfo());
+                }
             }
 
             // Now, find the basic blocks.
