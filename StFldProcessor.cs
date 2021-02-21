@@ -24,7 +24,7 @@ namespace CSharpLLVM
             else
             {
                 // Have to go through a pointer.
-                var gep = LLVM.BuildStructGEP(builder, obj.Value, (uint)idx, string.Empty);
+                var gep = LLVM.BuildStructGEP(builder, obj.Value, idx, string.Empty);
                 LLVM.BuildStore(builder, value.Value, gep);
             }
         }

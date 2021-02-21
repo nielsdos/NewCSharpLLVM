@@ -14,7 +14,7 @@ namespace CSharpLLVM
             var value = obj.Value;
 
             uint idx = compiler.TypeLookup.GetIndexInStructure(fieldRef);
-            var gep = LLVM.BuildStructGEP(builder, value, (uint)idx, string.Empty);
+            var gep = LLVM.BuildStructGEP(builder, value, idx, string.Empty);
 
             compiler.CurrentBasicBlock.GetState().StackPush(new EmulatedStateValue(gep, TypeInfo.Reference));
         }
