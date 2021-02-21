@@ -22,7 +22,16 @@ namespace CSharpLLVM
         /// <param name="fieldDef">The static field definition</param>
         public void DeclareField(FieldDefinition fieldDef)
         {
-            fieldMap.Add(fieldDef, LLVM.AddGlobal(moduleRef, typeLookup.GetLLVMTypeRef(fieldDef.FieldType), fieldDef.FullName));
+            var globalType = typeLookup.GetLLVMTypeRef(fieldDef.FieldType);
+            var globalValue = LLVM.AddGlobal(moduleRef, globalType, fieldDef.FullName);
+            fieldMap.Add(fieldDef, globalValue);
+
+            // TODO: optimize using InitialValue?
+            /*System.Console.WriteLine(fieldDef.InitialValue);
+            foreach(byte b in fieldDef.InitialValue)
+                System.Console.WriteLine(b);*/
+            
+            LLVM.SetInitializer(globalValue, LLVM.ConstNull(globalType));
         }
 
         /// <summary>
