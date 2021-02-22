@@ -115,8 +115,7 @@ namespace CSharpLLVM
             }
 
             // Compile the methods.
-            //Parallel.ForEach(typeList, typeDef =>
-            typeList.ForEach(typeDef => // TODO: parallell crashes LLVM?
+            Action<TypeDefinition> methodCompilationFn = typeDef =>
             {
                 foreach(MethodDefinition methodDef in typeDef.Methods)
                 {
@@ -126,7 +125,12 @@ namespace CSharpLLVM
                     if(!LLVM.VerifyFunction(methodCompiler.FunctionValueRef, LLVMVerifierFailureAction.LLVMPrintMessageAction))
                         LLVM.RunFunctionPassManager(fnPassManager, methodCompiler.FunctionValueRef);
                 }
-            });
+            };
+
+            if(LLVM.StartMultithreaded())
+                Parallel.ForEach(typeList, methodCompilationFn);
+            else
+                typeList.ForEach(methodCompilationFn);
 
             // Free memory already.
             MethodLookup.Finish();
